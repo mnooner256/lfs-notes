@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LFS Install Notes</title>
+  <meta charset="UTF-8">
+  <link type="text/css" rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Chapter 7 Setting Up System Bootscripts</h1>
+  </header>
+  <article>
+  <section class="intro">
+    <p>Here we have to configure our boot system. Several
+    sections in the book are not compatible with our system. Each
+    section below is meant to be a replacement for the listed section in the
+    book.</p>
+  </section>
+
+  <section>
+    <h2>After Reboot</h2>
+    <p>We need to make some small alterations to our reboot script in order to
+    utilize the programs we just created.</p>
+
+    <pre class="cmd">export LFS=/mnt/lfs
+mkdir -v $LFS
+mount -v -t ext4 /dev/sda1 $LFS
+mount -v -t ext4 /dev/sda2 $LFS/home
+mount -v -t ext4 /dev/sdb1 $LFS/sources
+mount -v --bind /dev $LFS/dev
+mount -vt devpts devpts $LFS/dev/pts
+mount -vt tmpfs shm $LFS/dev/shm
+mount -vt proc proc $LFS/proc
+mount -vt sysfs sysfs $LFS/sys
+swapon /dev/sda3
+
+chroot "$LFS" /usr/bin/env -i \
+    HOME=/root TERM="$TERM" PS1="\u:\w$ " \
+    PATH=/bin:/usr/bin:/sbin:/usr/sbin /bin/bash \
+    --login +h</pre>
+  </section>
+
+  <section>
+    <h2>7.2 General Network Configuration</h2>
+    <p>The book would have
+    have you set up a static IP address in this section. Instead, we are going
+    to setup our VM to use a dynamic IP address using DHCP. This is done much
+    later in the notes. Just skip this section entirely.</p>
+  </section>
+
+  <section>
+  <h2>7.3 Customizing the /etc/hosts File</h2>
+    <p>The <span class="file">hosts</span> file sets up basic routing
+    information. Generally this file only has one line. This line
+    specifies that the DNS address <em>localhost</em> resolves to
+    <em>127.0.0.1</em> which is the loopback device. Use this
+    <span class="file">hosts</span> file instead of the one given in the
+    book.</p>
+    <pre class="cmd">cat &gt; /etc/hosts &lt;&lt; "EOF"
+# Begin /etc/hosts (network card version)
+
+127.0.0.1 localhost lfs
+
+# End /etc/hosts
+EOF</pre>
+  </section>
+
+  <section>
+    <h2>7.4 Device and Module Handling</h2>
+    <p>This section is full of useful information on how Linux handles devices.
+    You should read it. However, there are no actions that need to be taken
+    in this section.</p>
+  </section>
+
+  <section>
+    <h2>7.5 Creating Custom Symlinks to Devices</h2>
+    <p>There is nothing to be done in this section. The udev service should
+    correctly guess where the CD-ROM is located.</p>
+  </section>
+
+  <section>
+    <h2>7.6 &amp; 7.7</h2>
+    <p>Follow the directions in the book.</p>
+  </section>
+
+  <section>
+    <h2>7.8 Configuring The System Hostname</h2>
+    <p>Use <em>lfs</em> as the hostname of your VM.</p>
+    <pre class="cmd">echo 'HOSTNAME=lfs' > /etc/sysconfig/network</pre>
+  </section>
+
+  <section>
+    <h2>7.9 Configuring the setclock Script</h2>
+    <p>The clock on your VM is might be off by quite a bit. We are going to
+    use local time on our VM as opposed to UTC. To set the time use the
+    following line. You will need to fill in the correct time and date
+    information.</p>
+
+    <pre class="cmd">date --set="YYYY-MM-DD HH:MM:00"</pre>
+
+    <p>After setting the date, continue on through 7.9 in the book.</p>
+  </section>
+
+  <section>
+    <h2>7.10&ndash;7.12</h2>
+    <p>These directions do not pertain to us. Read these sections because they
+    contain useful information, but do not follow any of their directions.</p>
+  </section>
+
+  <section>
+    <h2>7.13 The Bash Shell Startup Files</h2>
+    <p>Use the following for the profile file.</p>
+    <pre class="cmd">cat &gt; /etc/profile &lt;&lt; "EOF"
+# Begin /etc/profile
+
+export LANG=en_US.iso88591
+
+# End /etc/profile
+EOF</pre>
+
+    <p>Additionally, we need to make a more useful and friendly
+    environment for when we log on after we have finished building
+    the system.</p>
+
+    <pre class="cmd">cat >/root/.bash_profile &lt;&lt;EOF
+#!/bin/bash
+
+# If not running interactively, don't do anything
+[ -z "$PS1" ] && return
+
+# set a fancy color prompts
+if [ "$UID" == "0" ] ; then
+  PS1='\[\033[01;31m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w \[\033[01;31m\]\$ \[\033[00m\]'
+  PS2='\[\033[01;31m\]> \[\033[00m\]'
+else
+  PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w \[\033[01;32m\]\$ \[\033[00m\]'
+  PS2='\[\033[01;32m\]> \[\033[00m\]'
+fi
+
+#Colorize ls output (directories will be blue now)
+alias ls='ls --color=auto'
+
+#Useful shortcuts for building packages
+alias cmi='./configure --prefix=/usr && make && make install'
+alias mi='make && make install'
+
+export MAKEFLAGS="-j $(grep 'processor' /proc/cpuinfo | wc -l)"
+EOF</pre>
+
+    <p>Make our new settings take effect.</p>
+    <pre class="cmd">source /root/.bash_profile</pre>
+
+    <p>Finally, we need a <span class="file">.bashrc</span> file for non-login terminals. In this
+    case we want it to be identical to our login terminal.</p>
+    <pre class="cmd">cat >/root/.bashrc &lt;&lt;EOF
+#!/bin/bash
+
+source ~/.bash_profile
+EOF</pre>
+
+    <p>Make the bash startup files available to new users</p>
+    <pre class="cmd">mkdir -v /etc/skel
+cp -v /root/.bashrc /root/.bash_profile /etc/skel</pre>
+    </section>
+
+  <section>
+    <h2>7.14 Creating The /etc/inputrc File</h2>
+    <p>Follow the directions listed in the book.</p>
+  </section>
+
+  <section>
+    <h2>Installing Additional Software</h2>
+    <p style="font-weight:bold;font-size:1.1em;">After finishing chapter
+    seven, you should then do this section.</p>
+
+    <p>If we stopped at the software in chapter six we would not get very far.
+    That chapter only installs enough software to create a "usable" system.
+    The system that is made is not terribly useful, as it is missing some key
+    pieces of software. This software is found in the sequel to the book
+    called
+    <a href="http://www.linuxfromscratch.org/blfs/view/svn/index.html">
+    Beyond Linux From Scratch (BLFS)</a>. The software we need to install
+    is: a DHCP client, the mouse daemon, a web browser, and a
+    file downloader.
+
+    <p>Each section below will outline the installation procedure for each
+    piece of software. As with the book you should then automatically
+    uncompress the package and <code>cd</code> into that directory
+    before continuing.</p>
+
+    <p>You will need to download several files to build the packages. Using
+    a new console (outside the chroot environment), download the following
+    packages using this script.</p>
+
+    <p><strong>Warning:</strong> BLFS is updated quite frequently. One or more
+    of the URLs below may no longer work. This is usually because they updated
+    to a slightly new version of the software. If you run into a failed
+    download, please tell the instructor so he can update these notes.</p>
+    <pre class="cmd">
+cat > /tmp/package-list &lt;&lt;EOF
+http://www.linuxfromscratch.org/blfs/downloads/7.4/blfs-bootscripts-20130908.tar.bz2
+http://ftp.gnu.org/gnu/wget/wget-1.14.tar.xz
+http://roy.marples.name/downloads/dhcpcd/dhcpcd-6.0.5.tar.bz2
+http://www.nico.schottelius.org/software/gpm/archives/gpm-1.20.7.tar.bz2
+http://downloads.sourceforge.net/w3m/w3m-0.5.3.tar.gz
+http://www.hpl.hp.com/personal/Hans_Boehm/gc/gc_source/gc-7.2d.tar.gz
+http://www.openssl.org/source/openssl-1.0.1e.tar.gz
+http://www.linuxfromscratch.org/blfs/downloads/7.4/patches/w3m-0.5.3-bdwgc72-1.patch
+http://www.linuxfromscratch.org/blfs/downloads/7.4/patches/openssl-1.0.1e-fix_parallel_build-1.patch
+http://www.linuxfromscratch.org/blfs/downloads/7.4/patches/openssl-1.0.1e-fix_pod_syntax-1.patch
+EOF
+
+pushd /mnt/lfs/sources
+wget -i /tmp/package-list && rm -vf /tmp/package-list
+popd</pre>
+
+    <p>After downloading the scripts, switch back to the chroot environment.
+    We can then build these tools just like we did in chapter six.</p>
+
+    <h3>Blfs-bootscripts</h3>
+    <p>Both the DHCP client and the mouse daemon require boot scripts so that
+    they start automatically. Lucky for us, the authors of BLFS wrote them.
+    All we need to do is unarchive them, go ahead and do this now. We will
+    install the necessary scripts with each package as we come to it.</p>
+
+    <h3>dhcpcd &ndash; DHCP Client daemon</h3>
+    <p>In order to get our network interface up and running we will need to
+    use a DHCP client. A DHCP client allows us to dynamically discover routing
+    information as well as get an assigned IP address. The build is pretty
+    straight-forward.</p>
+    <pre class="cmd">
+./configure --libexecdir=/lib/dhcpcd --dbdir=/run --sysconfdir=/etc &&
+make                                                                &&
+make install                                                        &&
+sed -i "s;/var/lib;/run;g" dhcpcd-hooks/50-dhcpcd-compat &&
+install -v -m 644 dhcpcd-hooks/50-dhcpcd-compat /lib/dhcpcd/dhcpcd-hooks/
+</pre>
+
+    <p>Now we need to install the boot script so the daemon starts
+    automatically after a boot.</p>
+    <pre class="cmd">
+pushd ../blfs-bootscripts*/
+make install-service-dhcpcd
+popd
+</pre>
+
+    <p>In order for the networking services to configure our VM's Ethernet,
+    we have to specify how to set it up in a configuration file.</p>
+    <pre class="cmd">
+cat &gt; /etc/sysconfig/ifconfig.eth0 &lt;&lt;EOF
+ONBOOT="yes"
+IFACE="eth0"
+SERVICE="dhcpcd"
+DHCP_START="-b -q"
+DHCP_STOP="-k"
+
+# Set PRINTIP="yes" to have the script print
+# the DHCP assigned IP address
+PRINTIP="no"
+
+# Set PRINTALL="yes" to print the DHCP assigned values for
+# IP, SM, DG, and 1st NS. This requires PRINTIP="yes".
+PRINTALL="no"
+EOF
+</pre>
+
+    <h3>gpm &ndash; General Purpose Mouse daemon</h3>
+    <p>This package contains a mouse server for the console. It provides copy
+    and paste operations through the highlight-middle-click operation. We need
+    this because it is faster and less error prone to copy and paste rather
+    than typing each command by hand. Below are directions to install gpm.</p>
+
+    <pre class="cmd">
+./autogen.sh                                          &&
+./configure --prefix=/usr --sysconfdir=/etc           &&
+make                                                  &&
+make install                                          &&
+install-info --dir-file=/usr/share/info/dir           \
+             /usr/share/info/gpm.info                 &&
+ln -v -sfn libgpm.so.2.1.0 /usr/lib/libgpm.so         &&
+install -v -m644 conf/gpm-root.conf /etc              &&
+install -v -m755 -d /usr/share/doc/gpm-1.20.7/support &&
+install -v -m644    doc/support/*                     \
+                    /usr/share/doc/gpm-1.20.7/support &&
+install -v -m644    doc/{FAQ,HACK_GPM,README*}        \
+                    /usr/share/doc/gpm-1.20.7</pre>
+
+    <p>Now we need to set up the boot scripts so that the daemon starts
+    automatically at boot.</p>
+    <pre class="cmd">pushd ../blfs-bootscripts*/ && make install-gpm && popd</pre>
+
+    <p>Finally, we need to setup the configuration file for the mouse daemon.
+    The configuration file tells the daemon what device your mouse is and what
+    protocol it uses. The settings below should be safe on most systems, and
+    will definitely work with the VM.</p>
+    <pre class="cmd">cat &gt; /etc/sysconfig/mouse &lt;&lt; "EOF"
+# Begin /etc/sysconfig/mouse
+
+MDEVICE="/dev/input/mice"
+PROTOCOL="imps2"
+GPMOPTS=""
+
+# End /etc/sysconfig/mouse
+EOF</pre>
+
+    <h3>Wget &ndash; Our File Downloader</h3>
+    <p>We will need <code>wget</code> so we can partially script the build
+    for Xorg. Unfortunately, one of the items uses HTTPS. To enable
+    <code>wget</code> to understand HTTPS downloads we have to install one
+    optional component, namely OpenSSL.</p>
+
+    <h4>OpenSSL (wget's dependency)</h4>
+    <p>OpenSSL is a library used to interpret SSL connections. We need it
+    so we can make HTTPS connections which are encrypted using SSL. To install
+    OpenSSL simply do the following in its package directory:</p>
+
+    <pre class="cmd">
+patch -Np1 -i ../openssl-1.0.1*pod*.patch                           &&
+patch -Np1 -i ../openssl-1.0.1*parallel*.patch                      &&
+export openssl_pkg=$(basename $(pwd))                               &&
+./config --prefix=/usr zlib-dynamic --openssldir=/etc/ssl shared    &&
+make                                                                &&
+make MANDIR=/usr/share/man install                                  &&
+install -v -d -m755 /usr/share/doc/$openssl_pkg                     &&
+cp -v -r doc/* /usr/share/doc/$openssl_pkg</pre>
+
+    <h4>Install wget</h4>
+    <p>We can now build and install <code>wget</code>. This is a really
+    simple process. From its build directory do the following:</p>
+    <pre class="cmd">
+./configure --prefix=/usr      \
+            --sysconfdir=/etc  \
+            --with-ssl=openssl &&
+make                           &&
+make install</pre>
+
+    <h3>w3m &ndash; A Text Mode WWW Browser</h3>
+    <p>In order to make the system usable you will need to be able to browse
+    the web. That is <code>w3m</code>'s job. The <code>w3m</code> browser is
+    pretty much the most advanced browser for the console. Before can install
+    <code>w3m</codE> we need install its one dependency the <em>GC</em>
+    package.</p>
+
+    <h4>Build GC (w3m's dependency)</h4>
+    <p>GC is a garbage collector for C/C++. To build this package, start in
+    the package's directory and do the following:</p>
+
+    <pre class="cmd">
+sed -i 's#AM_CONFIG_HEADER#AC_CONFIG_HEADERS#' configure.ac &&
+sed -i 's#AM_CONFIG_HEADER#AC_CONFIG_HEADERS#' libatomic_ops/configure.ac &&
+sed -i 's#pkgdata#doc#' doc/doc.am &&
+autoreconf -fi  &&
+./configure --prefix=/usr      \
+            --enable-cplusplus \
+            --disable-static   \
+            --docdir=/usr/share/doc/gc-7.2d &&
+make</pre>
+
+    <p>This library has broken before. I highly recommend that you run the
+    check, it is less than 0.1 SBUs.</p>
+
+    <pre class="cmd">make check</pre>
+
+    <p>Now we need to actually install this library.</p>
+
+    <pre class="cmd">
+make install &&
+install -v -m644 doc/gc.man /usr/share/man/man3/gc_malloc.3 &&
+ln -sfv gc_malloc.3 /usr/share/man/man3/gc.3</pre>
+
+    <h4>Install w3m</h4>
+    <p>Alright, now we are ready to install <code>w3m</code>. From its
+    package directory do the following:</p>
+    <pre class="cmd">
+patch -p1 &lt; ../w3m-0.5.3-bdwgc72-1.patch &&
+sed -i 's/file_handle/file_foo/' istream.{c,h} &&
+sed -i 's#gdk-pixbuf-xlib-2.0#& x11#' configure &&
+./configure --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib &&
+make &&
+make install &&
+install -v -m644 -D doc/keymap.default /etc/w3m/keymap &&
+install -v -m644    doc/menu.default /etc/w3m/menu &&
+install -v -m755 -d /usr/share/doc/w3m-0.5.3 &&
+install -v -m644    doc/{HISTORY,READ*,keymap.*,menu.*,*.html} \
+                    /usr/share/doc/w3m-0.5.3</pre>
+
+    <p><code>w3m</code> is very user friendly compared to other console based
+    web browsers. It handles the mouse very well. It does have some
+    counter-intuitive features though. Most things are done through a
+    right-click based popup menu. The most imporant option is the <em>Save
+    Link</em> option. You highlight text for copy paste operations by holding
+    down the <kbd>Shift</kbd> key as you drag the mouse. You can travel
+    backwards using the <kbd>Shift-B</kbd> key. You can follow a hyperlink in
+    two ways. First you can place your cursor under the link, and hit
+    <kbd>Enter</kbd>. Second, you can double click on the link.</p>
+
+    <p>For more information you can view the online manual page at
+    <a href="http://w3m.sourceforge.net/MANUAL">http://w3m.sourceforge.net/MANUAL</a>.
+    </p>
+  </section>
+  </article>
+  <footer>
+    <a id="html" href="http://validator.w3.org/check?uri=referer"
+       target="_blank">[HTML 5]</a>
+    <a id="css" href="http://jigsaw.w3.org/css-validator/check/referer?profile=css3"
+       target="_blank">[CSS 3]</a>
+  </footer>
+</body>
+</html>

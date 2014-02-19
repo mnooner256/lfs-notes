@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LFS Install Notes</title>
+  <meta charset="UTF-8">
+  <link type="text/css" rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header>
+  <h1>Chapter 6 Installing Basic System Software</h1>
+</header>
+<article>
+  <section class="intro">
+    <p>You should read and follow all the directions found in
+    chapter six. Below are some helpful hints to make building chapter six
+    easier.</p>
+  </section>
+
+  <section>
+    <h2>Root User</h2>
+    <p>Before starting chapter six, be sure you are the <strong><em>root</em>
+    user</strong>, not the <em>lfs</em> user. You were supposed to switch back
+    to the <em>root</em> user in section 5.34. It is an easy direction to miss.
+    If you did not switch, then be sure to repeat section 5.34.</p>
+
+    <p>You can switch back out of the <em>lfs</em> user by using the
+    <code>exit</code> command. After switching you need to double check that
+    the <code>$LFS</code> variable still has the correct value. Check the
+    variable's value with the command below. If the variable is empty or the
+    value is incorrect, then
+    refer to section 4.1.</p>
+
+    <pre class="edit"><span class="cmd">echo $LFS</span>
+<mark>/mnt/lfs</mark></pre>
+
+    <h2>Uncompressing The Packages</h2>
+    <p>The first thing we need to do is to start with clean slate for chapter
+    six. We don't want any object files from the previous chapter to sneak
+    their way into our clean system. With this in mind we need to delete the
+    old source directories and uncompress the packages again. As
+    <strong>root</strong> run the following commands.
+
+    <pre class="cmd">cd $LFS/sources
+rm -rf */
+for i in *.gz *.bz2 *.xz ; do echo "Unarchiving: $i"; tar xf $i ; done</pre>
+    </section>
+
+  <section>
+    <h2>General Build Advice</h2>
+    <p>Below is general advice to help you build your VM successfully.</p>
+
+    <h3>Timing</h3>
+    <p>Chapter six is by far the longest chapter to get through in the book.
+    This chapter not only has long build times but there are a lot of packages
+    to install. The chapter is broken into 65 sections! The glibc, binutils,
+    gcc, and coreutils will take you the longest to install. So plan your
+    time accordingly.</p>
+
+    <p>As with chapter five, this chapter keeps with the SBU system. Given
+    an SBU  of two minutes, we can calculate how much time you will need to
+    finish chapter six. I went through the chapter and totaled the listed SBU's
+    and came up with 114.6 SBU's. So for my machine it would take
+    <strong>3 hours</strong> and <strong>49 minutes</strong>, i.e. (2 * 114.6)
+    / 60, to complete this chapter. </p>
+
+    <h3>Testing</h3>
+    <p>Testing can take a long, long time. So my advice is to only do the
+    mandatory tests. The book is quite explicit on what tests
+    <strong>cannot</strong> be skipped. Remember that some software, e.g.
+    <code>gcc</code>, is so complex there are known and expected failures.
+    Read the book carefully, and use your judgment, to decide whether an
+    failure really matters or if you can go on.</p>
+
+    <h3>What To Do When A Build Fails</h3>
+
+    <p>You may enter a situation where a build fails for some reason.
+    This usually occurs because of an unmet dependency. This means a
+    previous program was not installed properly, although it may have
+    reported that it was. There is no silver bullet solution to these
+    problems. You need to try and figure out from what the make file
+    was doing what caused the error. Some packages will give you
+    good error messages, others will not.</p>
+
+    <p>For example, I could not get the Kmod package to build. It could not
+    find the <span class="file">lzma.h</span> file. To solve this problem
+    I Googled <q>linux from scratch lzma.h</q> and discovered that
+    the file was provided by the Xz package. So I rebuilt and reinstalled
+    the Xz package. This solved the missing
+    <span class="file">lzma.h</span> file problem. But the Kmod package
+    still would not build. I hypothesized that the directory was now
+    in a bad state. So I deleted the <span class="file">kmod-5</span>
+    directory and then uncompressed the package's archive to give me a clean
+    slate. The package now built easily. I went ahead and did the tests to
+    double check that everything was now good.</p>
+
+    <p>This is just an small example of all the possible things that could go
+    wrong. If you get stuck with an error, you can as always
+    come see me. But to use your time more efficiently you should try
+    to solve the problem on your own.</p>
+  </section>
+
+  <section>
+    <h2>Section by Section Advice</h2>
+    <p>For most of this chapter you simply need to follow the book's
+    directions. However there are a couple of sections that have special
+    considerations.</p>
+
+    <h3>6.3. Package Management</h3>
+    <p>This section offers a broad overview of how package management works in
+    the various Linux distributions. I highly recommend you read this section
+    carefully. We are not using any form of package management, however, because
+    using a package manager is antithetical to what LFS is trying to teach
+    you. In other words, there is no directions to follow in this section.</p>
+
+    <p>After reading this section, I highly recommend that you reboot your
+    VM. You have at this point built a ton of packages. Your VM's RAM is
+    probably pretty fragmented. Also, this will give you a clean slate
+    to work off of.</p>
+
+    <p>Once you have rebooted run the script below to return you to a good
+    state. Afterwards, just continue onto section 6.4.</p>
+
+    <pre class="cmd">export LFS=/mnt/lfs
+mkdir -pv $LFS
+mount -v -t ext4 /dev/sda1 $LFS
+mount -v -t ext4 /dev/sda2 $LFS/home
+mount -v -t ext4 /dev/sdb1 $LFS/sources
+if ! grep -q sda3 /proc/swaps; then /sbin/swapon -v /dev/sda3; fi
+mknod -m 600 $LFS/dev/console c 5 1
+mknod -m 666 $LFS/dev/null c 1 3
+mount -v --bind /dev $LFS/dev
+mount -vt devpts devpts $LFS/dev/pts -o gid=5,mode=620
+mount -vt proc proc $LFS/proc
+mount -vt sysfs sysfs $LFS/sys
+mount -vt tmpfs shm $LFS/dev/shm
+</pre>
+
+
+    <h3>6.17 GCC</h3>
+    <p>Before compiling GCC you are going to need to free up a lot of disk
+    space. We are going to do this by deleting the build directories for
+    binutils and glibc.</p>
+
+    <pre class="cmd">rm -rf $LFS/sources/{bin,glibc}*/</pre>
+
+    <p>After you build the GCC binary files, the chapter will ask you to
+    test them. Do not skip this test! The estimated SBU's are,
+    in my opinion, way off. The testing took me about two hours. I personally,
+    start the tests leave your computer alone for several hours. Even though
+    the process is quite lengthy, the test are very important. I have, in the
+    past, had students who skipped this step, only to have it come back and
+    bite them later on in the book.</p>
+
+    <p>You also need to be aware that there are some expected
+    failures. The script that generates the summaries scrolls by on the
+    screen to fast for you to read, and there are no pagers installed
+    in the chroot environment. To view the test results run the
+    following commands.</p>
+
+    <pre class="cmd">../gcc-[0-9]*/contrib/test_summary > /tmp/tests</pre>
+
+    <p>In a new console that is outside of the chroot environment run
+    this command:</p>
+
+    <pre class="cmd">less /mnt/lfs/tmp/tests</pre>
+
+    <p>This will let you view the test log file using <code>less</code>,
+    which is the same pager man pages use.</p>
+
+    <p>Compiling and testing GCC takes up a lot disk space, over 1GB.
+    You will need to scavenge this space back to finish chapter
+    six. Use the command below to free up this space (be sure to run
+    this only after you have completely finished 6.17).</p>
+
+    <pre class="cmd">cd $LFS/sources && rm -rf $LFS/sources/gcc*/</pre>
+  </section>
+
+  <section>
+    <h2>After Rebooting Your VM</h2>
+    <p>As you will quickly realize, we need slightly different directions to
+    come back after rebooting our VM. The script below will get you up and
+    running. You will need to <strong>complete sections 6.1&ndash;6.4</strong>
+    before using it. If you are working on 6.1&ndash;6.4 then just use the
+    previous reboot script.</p>
+
+    <pre class="cmd">export LFS=/mnt/lfs
+mkdir -pv $LFS
+mount -v -t ext4 /dev/sda1 $LFS
+mount -v -t ext4 /dev/sda2 $LFS/home
+mount -v -t ext4 /dev/sdb1 $LFS/sources
+if ! grep -q sda3 /proc/swaps; then /sbin/swapon -v /dev/sda3; fi
+mknod -m 600 $LFS/dev/console c 5 1
+mknod -m 666 $LFS/dev/null c 1 3
+mount -v --bind /dev $LFS/dev
+mount -vt devpts devpts $LFS/dev/pts -o gid=5,mode=620
+mount -vt proc proc $LFS/proc
+mount -vt sysfs sysfs $LFS/sys
+mount -vt tmpfs shm $LFS/dev/shm
+chroot "$LFS" /tools/bin/env -i \
+    HOME=/root                  \
+    TERM="$TERM"                \
+    PS1='\u:\w\$ '              \
+    PATH=/bin:/usr/bin:/sbin:/usr/sbin:/tools/bin \
+    /tools/bin/bash --login +h</pre>
+
+</section>
+</article>
+<footer>
+    <a id="html" href="http://validator.w3.org/check?uri=referer"
+       target="_blank">[HTML 5]</a>
+    <a id="css" href="http://jigsaw.w3.org/css-validator/check/referer?profile=css3"
+       target="_blank">[CSS 3]</a>
+</footer>
+</body>
+</html>

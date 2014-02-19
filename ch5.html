@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>LFS Install Notes</title>
+    <meta charset="UTF-8">
+    <link type="text/css" rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Chapter 5 Constructing a Temporary System</h1>
+    </header>
+    <article>
+    <section class="intro">
+    <p>You should read and follow all the directions found in
+    chapter five. Below are some helpful hints to make building chapter five
+    easier. Always read these notes first.
+    </section>
+
+    <section>
+    <h2>Rebooting the VM</h2>
+      <p>Whenever you reboot a LiveCD it forgets about any changes you made
+      to the running system, such is the nature of LiveCD's. Chapters two and
+      four have you perform several changes to the host operating system.
+      Since these changes do not persist between reboots, you will have to
+      repeat them each time the system boots. Below is "script" you can copy
+      and paste to return you to a working state. It essentially repeats the
+      necessary steps laid out in chapters two and four.</p>
+
+      <p>You only need to run this script if you rebooted or shut down your
+      VM. If you used "Save the machine state," you do not need to run this
+      script.</p>
+
+      <pre class="cmd">export LFS=/mnt/lfs
+mkdir -v /mnt/lfs
+mount -v -t ext4 /dev/sda1 $LFS
+mount -v -t ext4 /dev/sda2 $LFS/home
+mount -v -t ext4 /dev/sdb1 $LFS/sources
+if ! grep -q sda3 /proc/swaps; then /sbin/swapon -v /dev/sda3; fi
+groupadd lfs
+useradd -s /bin/bash -g lfs -m -b $LFS/home -k /dev/null lfs
+ln -sv $LFS/tools /tools
+su - lfs
+</pre>
+    </section>
+
+    <section>
+    <h2>Uncompressing The Packages</h2>
+    <p>Before starting chapter five you need to uncompress all of the packages
+    you downloaded in the chapter three notes. Before starting be sure your
+    terminal is using the <em>lfs</em> user. If you do this as root you will
+    quickly run into significant problems.</p>
+
+    <pre class="cmd">cd $LFS/sources
+for i in *.gz *.bz2 *.xz ; do echo "Unarchiving: $i"; tar xf $i ; done</pre>
+    </section>
+
+    <section>
+    <h2>Building Advice</h2>
+    <p>An unwritten direction is that each build should be executed
+    inside that item's source directory. <strong>Start every section inside
+    that package's directory!</strong> For example, the directions for
+    section <q>5.17 Bzip2</q> should be done inside of the
+    <span class="file">$LFS/sources/bzip2-1.0.6</span> directory. Some
+    directions will have you create a special build directory. None the less,
+    you should still <strong>start</strong> the section inside the package's
+    source directory. The book will then have you use paths relative to that
+    source directory. Towards the end of the chapter when the build times get
+    short, it is easy to mess this up and build the same package over again,
+    but think you built the next one. Be careful!</p>
+
+    <p>In this chapter be sure to <strong>skip the tests & checks</strong>.
+    They are not necessary to for this chapter and can be quite time
+    consuming.</p>
+
+    <h3>Combining Directions</h3>
+
+    <p>Many of the programs, starting in section 5.13, contain a variation on
+    the <code>./configure &rarr; make &rarr; make install</code> system. Doing
+    each stage separately
+    can be a problematic. It is easy to think you issued <code>make
+    install</code> when in fact you are on the <code>make</code> stage.
+    To help solve this you can combine directions into a single command
+    by separating the parts of the command with the <code>&&</code>
+    operator. This operator acts as a <em>short-circuiting logical and</em>.
+    Therefore, each command in the chain is only executed if all the preceding
+    commands executed successfully. For example, you could build Sed (and many
+    other packages) like this:</p>
+
+    <pre class="cmd">./configure --prefix=/tools && make && make install</pre>
+
+    <h3>Before doing GCC and BinUtils Second Pass</h3>
+    <p>You need to delete the build directories that you used previously. You
+    also need to delete the directory that was created when we uncompressed
+    the tar-ball. You then need to uncompress the two files again. Failure to
+    do this will result in Chapter Six failing mysteriously, and you will have
+    to repeat a lot of work. Not doing this creates a subtle error that cannot
+    be detected until you are well into  Chapter Six. To fix this problem you
+    will have to <em>repeat all</em> of chapter five.
+    <strong>Consider yourself warned!!!</strong></p>
+
+    <h4>Section 5.7</h4>
+    <p>Before starting this section, you need to get rid of the
+    <span class="file">gcc</span> directories to free up enough space for
+    the <span class="file">glibc</span> package to compile.</p>
+    <pre class="cmd">rm -rf $LFS/sources/gcc*/</pre>
+
+    <h4>Section 5.9</h4>
+    <p>Before starting the this section run these two commands. This will
+    give you a brand-new source directory.</p>
+    <pre class="cmd">cd $LFS/sources
+rm -rf binutils*/
+tar xjf binutils*.tar.bz2</pre>
+
+    <h4>Section 5.10</h4>
+    <p>Before starting the this section run these two commands. This will
+    give you a brand-new source directory.</p>
+    <pre class="cmd">cd $LFS/sources
+rm -rf {gcc,binutils,glibc}*/
+tar xjf gcc*.tar.bz2</pre>
+
+    <p><strong>After completing this section</strong> run this command. It will
+    scavenge 2GB disk space. Remember the virtual hard disk only has 4GB of
+    space, so the savings are enormous.</p>
+
+    <pre class="cmd">cd $LFS/sources && rm -rf {gcc,binutils,glibc}*/</pre>
+    </section>
+
+    <section>
+    <h2>Timing</h2>
+    <p>Keeping track of how long things are taking is highly advised. It is very
+    important that you time the first build very precisely. All the other timings
+    are given as a relative measurement to this build's time. This measurement is
+    called a SBU. Below is a group of commands that you need to copy and paste
+    that will notify you of the total time taken for section 5.4 of the book.
+    <strong>This script should be done instead of following the directions
+    inside of section 5.4.</strong></p>
+
+    <pre class="cmd">cd $LFS/sources/binutils*/
+time {
+mkdir -v ../binutils-build &amp;&amp;
+sed -i -e 's/@colophon/@@colophon/' \
+       -e 's/doc@cygnus.com/doc@@cygnus.com/' bfd/doc/bfd.texinfo &amp;&amp;
+cd ../binutils-build &amp;&amp;
+../binutils*/configure \
+    --prefix=/tools \
+    --with-sysroot=$LFS \
+    --with-lib-path=/tools/lib \
+    --target=$LFS_TGT  \
+    --disable-nls --disable-werror &amp;&amp;
+make &amp;&amp;
+make install
+}</pre>
+
+    <p>The <code>time</code> command outputs three times, but you only really
+    care about the first. This is the actual amount of time taken to perform
+    all the commands within the braces. The commands above gave me the
+    following output. We only care about the <em>real</em> timing, the others
+    do not matter.</p>
+
+    <pre class="edit"><span class="cmd">time { ... }</span>
+<mark>real    2m2.590s</mark>
+user    1m14.593s
+sys     0m10.973s</pre>
+
+    <p>The <em>real</em> timing is your SBU! Given this SBU we can calculate
+    how much time you will need to finish chapter five. I went through the
+    chapter and totaled the listed SBU's and came up with 27.40 SBU's. So on
+    my computer it will take approximately <strong>55 minutes</strong>, i.e.
+    (2 * 27.40).
+    </section>
+
+    <section>
+    <h2>Taking Snapshots</h2>
+
+    <p>One of the major benefits of using a virtual machine to compile LFS is
+    that you can take snapshots. Snapshots allow you to take a <q>picture</q>
+    of the virtual machine. This picture includes the current state of the
+    hard drive and if the machine is running it also records what is in RAM.
+    You can then later revert the virtual machine to this state.</p>
+
+    <p>I highly recommend that you take frequent snapshots of your virtual
+    machine. The directions in the book are extremely detailed and easy to
+    mess up. Everyone makes mistakes during this process (I have had to
+    start over five times so far). Snapshots allow you
+    to revert the machine to a <q>good</q> state before the mistake
+    happened.</p>
+
+    <p>If you do not take snapshots you may have to start all over at some
+    point. Snapshot will help you minimize any wasted effort.</p>
+
+    <p>I recommend that you take a snapshot before starting each chapter.
+    Also, take one after the first and second pass of GCC because it takes the
+    longest to compile.</p>
+
+</section>
+</article>
+<footer>
+    <a id="html" href="http://validator.w3.org/check?uri=referer"
+       target="_blank">[HTML 5]</a>
+    <a id="css" href="http://jigsaw.w3.org/css-validator/check/referer?profile=css3"
+       target="_blank">[CSS 3]</a>
+</footer>
+</body>
+</html>

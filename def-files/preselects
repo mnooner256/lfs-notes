@@ -1,0 +1,40 @@
+grub-pc grub-pc/kopt_extracted  boolean false
+grub-pc grub2/kfreebsd_cmdline  string
+grub-pc grub2/device_map_regenerated    note
+grub-pc grub-pc/install_devices multiselect     /dev/sda
+grub-pc grub-pc/postrm_purge_boot_grub  boolean false
+grub-pc grub-pc/install_devices_failed_upgrade  boolean true
+grub-pc grub2/linux_cmdline     string
+grub-pc grub-pc/install_devices_empty   boolean false
+grub-pc grub2/kfreebsd_cmdline_default  string  quiet
+grub-pc grub-pc/install_devices_failed  boolean false
+grub-pc grub-pc/install_devices_disks_changed   multiselect
+grub-pc grub2/linux_cmdline_default     string  quiet
+grub-pc grub-pc/chainload_from_menu.lst boolean true
+grub-pc grub-pc/mixed_legacy_and_grub2  boolean true
+keyboard-configuration  keyboard-configuration/modelcode        string  pc105
+keyboard-configuration  keyboard-configuration/unsupported_config_options       boolean true
+keyboard-configuration  keyboard-configuration/unsupported_config_layout        boolean true
+keyboard-configuration  keyboard-configuration/toggle   select  No toggling
+keyboard-configuration  keyboard-configuration/compose  select  No compose key
+keyboard-configuration  keyboard-configuration/layout   select
+keyboard-configuration  keyboard-configuration/xkb-keymap       select  us
+keyboard-configuration  keyboard-configuration/variant  select  USA
+keyboard-configuration  keyboard-configuration/switch   select  No temporary switch
+keyboard-configuration  keyboard-configuration/unsupported_options      boolean true
+keyboard-configuration  keyboard-configuration/altgr    select  The default for the keyboard layout
+keyboard-configuration  keyboard-configuration/ctrl_alt_bksp    boolean false
+keyboard-configuration  keyboard-configuration/unsupported_layout       boolean true
+keyboard-configuration  keyboard-configuration/variantcode      string
+keyboard-configuration  keyboard-configuration/model    select  Generic 105-key (Intl) PC
+keyboard-configuration  keyboard-configuration/layoutcode       string  us
+keyboard-configuration  keyboard-configuration/store_defaults_in_debconf_db     boolean true
+keyboard-configuration  keyboard-configuration/optionscode      string
+console-setup   console-setup/codeset47 select  . Combined - Latin; Slavic Cyrillic; Greek
+console-setup   console-setup/fontface47        select  Fixed
+console-setup   console-setup/fontsize-text47   select  16
+console-setup   console-setup/charmap47 select  UTF-8
+console-setup   console-setup/codesetcode       string  Uni2
+console-setup   console-setup/store_defaults_in_debconf_db      boolean true
+console-setup   console-setup/fontsize-fb47     select  16
+console-setup   console-setup/fontsize  string  16

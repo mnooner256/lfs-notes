@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>LFS Install Notes</title>
+<meta charset="UTF-8">
+<link type="text/css" rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header>
+  <h1>Preface</h1>
+</header>
+<article>
+  <section class="intro">
+  <p>These "notes" are designed to be used in addition to the instructions
+  found in the LFS book. They are specially formulated to help you avoid many
+  of the pitfalls first time LFS installers run into. They are predicated on the
+  idea that you will be installing the system using a VM. For simplicity's sake,
+  I am mandating that you <strong>must use
+  <a href="http://virtualbox.org">VirtualBox</a></strong> as the
+  virtualization software.</p>
+
+  <p>All of the "notes" together comprise an additional 30+ printed pages of
+  help. Following the directions found in the notes and in the LFS book
+  precisely is critical to successfully installing LFS.</p>
+  </section>
+
+  <section>
+    <h2>Typographic Conventions In These Notes</h2>
+    <p>There are several different conventions for how things are written in
+    these notes. Pay special attention to what the different typographic
+    formats are.</p>
+
+    <p>Commands to be entered into a terminal appear as follows. Each command is
+    written onto a single line. They are grouped together inside of gray boxes
+    like the one below. The example below would have you type into a terminal:
+    <code>cd $LFS</code> followed by <code>ls</code> followed by
+    <code>pwd</code>.</p>
+    <pre class="cmd">cd $LFS
+ls
+pwd</pre>
+
+    <p>Occasionally, you will need to edit some files. The result of the edit
+    will appear as below. Notice that the <em>file's path is displayed
+    at the top</em> in the red header.
+
+    <pre class="edit"><span>~/.bashrc</span>
+set +h
+umask 022
+LFS=/mnt/lfs
+LC_ALL=POSIX
+PATH=/tools/bin:/bin:/usr/bin
+export LFS LC_ALL PATH</pre>
+
+    <p>Rarely, I will need to inform you about the exact output of a
+    command. This is usually done so you can manually check that a step was
+    completed successfully. The command is the first line (in the gray box) and
+    the commands output appears below it (in white). If your attention needs
+    to be drawn to a specific area of the output it will be highlighted.</p>
+    <pre class="edit"><span class="cmd">df -h</span>
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/mapper/lfs-cd    1.5G  1.3G  197M  87% /
+/dev/sda1             5.7G  140M  5.3G   3% /mnt/lfs
+<mark>/dev/sda2             497M   19M  453M   4% /mnt/lfs/home</mark></pre>
+
+
+    <p>Another convention is how files, commands, and key board shortcuts are
+      written. Below is a list of these conventions.</p>
+    <ul>
+      <li>Files and directories, like <span class="file">/etc</span>, are written in
+      monospaced font.</li>
+      <li>Commands, like <code>ls</code>, are written in a bold monospaced
+        font.</li>
+      <li>Keyboard shorcuts, like <kbd>Ctrl+C</kbd>, are written using a comic
+        style font.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Minimum System Requirements</h2>
+    <p>Just like any other software an LFS install has minimum requirements it
+    expects from the operating system. The requirements below are for the
+    <em>physical host machine</em>.</p>
+    <ol>
+      <li>The host machine must have at least 2GB of RA.M</li>
+      <li>You will need 8GB of free, portable, storage space.</li>
+      <li>This
+        <a href="./lfs-cd.iso">
+        LFS LiveCD ISO</a> file. This is a custom Linux distribution created
+        by me. It is based on Debian and is setup so that it has
+        all the required software to build LFS.</li>
+      <li>VirtualBox virtualization software.</li>
+    </ol>
+  </section>
+</article>
+<footer>
+    <a id="html" href="http://validator.w3.org/check?uri=referer"
+       target="_blank">[HTML 5]</a>
+    <a id="css" href="http://jigsaw.w3.org/css-validator/check/referer?profile=css3"
+       target="_blank">[CSS 3]</a>
+</footer>
+</body>
+</html>

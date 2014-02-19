@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#Include the default bashrc and profile file
+source /etc/skel/.bashrc
+
+#Set the prompt
+export PS1="\\[\\033[0;31m\\]\\u:\\w#\\[\\033[0m\\] "
+
+umask 022
+
+#Make file removal interactive by default
+alias rm="rm -i"
+
+#Add needed paths
+export PATH=/sbin:/usr/sbin:/usr/local/sbin:$PATH

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LFS Install Notes</title>
+  <meta charset="UTF-8">
+  <link type="text/css" rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Chapter 9 The End</h1>
+  </header>
+  <article>
+  <section class="intro">
+    <p>There is nothing for you to do in this chapter.  This is the
+    make or break time. Either your machine will boot or it won't.
+    <strong>Take a snapshot before rebooting!</strong></p>
+  </section>
+  
+  <section>
+    <h2>Rebooting</h2>
+    <p>To reboot your machine simply click Logout in the LXDE program
+    menu. Then you just need to click Reboot in the resulting window.</p>
+
+    <p>After your machine has shutdown, it will reload using a BIOS just like
+    a physical machine. You need to set the boot device to your hard drive.
+    You can do this by pressing <kbd>F12</kbd> at the BIOS screen (select
+    the first hard drive). LFS distro should be the only thing listed there. Next,
+    comes the scary part. The kernel will attempt to load. If your kernel
+    fails you will get a "Kernel Panic!" message. This means you did not
+    compile or install your kernel correctly. Kernel loading is followed by
+    the boot scripts running through the init process. Everything should
+    display a green <code style="color:#0F0">OK</code>. If not then you have
+    problems. Finally, you should see a login prompt.</p>
+    
+    <figure>
+      <img src="img/console.png" width="600px">
+      <figcaption>After Reboot</figcaption>
+    </figure>
+  </section>
+  
+  <section>
+    <h2>Problems?</h2>
+    <p>If you have any problems you will need to come and see me. I can't
+    really give general advice here because each person will probably have
+    something different wrong with their system. So come and see me with your
+    problems.
+  </section>
+  
+  <section>
+    <h2>Success???</h2>
+    <p>Lets suppose your machine worked right off the bat. If your machine
+    booted perfectly, then you will be confronted with a login prompt. Go
+    ahead and login into the root account.</p>
+
+    <h3>Basic Tools Check</h3>
+    <p>Your basic tools probably installed correctly if you got this far. To
+    check, examine the contents of the
+    <span class="file">/bin</span> and <span class="file">/usr/bin</span>
+    directories by running the command below. The command below display any
+    programs with a zero file size, it should <strong>only print the
+    word</strong> <q>done</q>.</p>
+    <pre class="cmd">find {,/usr}/bin -size 0 && echo done</pre>
+
+    <h3>Mouse Deamon Check</h3>
+    <p>Next we need to see if your mouse daemon is working. Try clicking on
+    the VM's window and move your mouse around try highlighting and pasting
+    text using the middle-click.</p>
+
+    <h3>Network Check</h3>
+    <p>Next we need to see if DHCP worked. To check this we will use two steps
+    first we will see if we have an IP address. Virtual box usually assigns
+    IPs in the 10.0.*.* range. I have given you an example output for the
+    command below. Don't be startled if your output is slightly different than
+    mine. What matters is the <em>inet</em> field has a valid IP range.</p>
+    <pre class="edit"><span class="cmd">ip addr show eth0 | grep inet</span>
+    inet 10.0.2.15/24 brd 10.0.2.255 scope global eth0
+    inet6 fe80::a00:27ff:feb29:869/64 scope link</pre>
+
+    <p>Next we need to check if we can talk to the outside world. To do
+    that we will use <code>w3m</code> to lookup a website.</p>
+    <pre class="cmd">w3m www.google.com</pre>
+    
+    <p>Finally, lets make sure that wget is working by accessing Google via
+    HTTPS. This command should print <q>Success</q></p>
+    
+    <pre class="cmd">wget https://www.google.com --no-check-certificate -O/dev/null && echo Success</pre>
+    
+    <h3>Fstab Check</h3>
+    <p>We need to check that you mounted all of your filesystems correctly.
+    Issue the command below. The order of the lines may be different, just make
+    sure that the marked entries are there.</p>
+    
+    <pre class="edit"><span class="cmd">mount</span>
+<mark>/dev/sda1 on /</mark> type ext4 (rw)
+proc on /proc type proc (rw,noexec,nosuid,nodev)
+sysfs on /sys type sysfs (rw,noexec,nosuid,nodev)
+tmpfs on /run type tmpfs (rw)
+devtmpfs on /dev type devtmpfs (rw,nosuid,mode=0755)
+<mark>/dev/sda2 on /home</mark> type ext4 (rw)
+<mark>/dev/sdb1 on /sources</mark> type ext4 (rw)
+devpts on /dev/pts type devpts (rw,gid=5,mode=620)</pre>
+
+    <h3>Eject CDROM</h3>
+    <p>Our fake CD is still in the virtual drive. We need to eject it so
+    your machine will reboot normally. To do this click <em>Devices &rarr;
+    CD/DVD Devices &rarr; Remove disk from virtual drive</em> in the
+    VM's menu bar. It may ask want you to <q>force unmount</q> the disk. This
+    is normal. Go ahead and unmount it.</p>
+
+    <h1 style="text-align:center;font-size:3em">If everything works you did
+    it!!!!<br>
+    Hurray for you!</h1>
+  </section>
+  </article>
+  <footer>
+    <a id="html" href="http://validator.w3.org/check?uri=referer"
+       target="_blank">[HTML 5]</a>
+    <a id="css" href="http://jigsaw.w3.org/css-validator/check/referer?profile=css3"
+       target="_blank">[CSS 3]</a>
+  </footer>
+</body>
+</html>

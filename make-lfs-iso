@@ -1,0 +1,589 @@
+#!/bin/bash -e
+
+#*** CHANGE THIS VARIABLE EVERY TIME THE CLASS IS OFFERED ***
+#This variable holds the name of the current release of the LFS book. The book
+#will be installed on the CD for offline reading by the students.
+export BOOK_ZIP='LFS-BOOK-7.4.tar.bz2'
+
+#*** CHANGE THIS VARIABLE EVERY TIME THE CLASS IS OFFERED ***
+#These are extra packages that make using the USB far
+#easier. It also include the list of packages found in
+#the LFS "Host System Requirements" section in the preface.
+#Many of these are installed by default they are listed
+#here for clarity. This leaves out *glibc* and the *kernel*
+#because they are part of the base install and have no
+#separate pacakges.
+export EXTRAS='lxde-common lxterminal lxsession lxappearance lxrandr lxtask \
+               xorg tango-icon-theme iceweasel slim \
+               squashfs-tools build-essential bootcd syslinux network-manager \
+               bash binutils bison bzip2 coreutils diffutils findutils \
+               gawk gcc grep gzip m4 make patch perl sed tar texinfo \
+               xz-utils'
+
+#This variable sets where the initial system files will be temporarily
+#installed
+export CHROOT='/media/chroot'
+
+#This variable sets a directory that will temporarily hold the ISO system
+#just before the file is built.
+export ISO_BUILD='/media/iso'
+
+#This is the final location for the ISO file
+export ISO="$PWD/lfs-cd.iso"
+
+#This variable sets the location of the default files directory which
+#holds settings files for the new system. It is set relative to the
+#directory containing this script.
+export DEFFILES='def-files'
+
+#This should be the architecture the new system
+export ARCH='i386'
+
+#The Ubuntu "code name" to use for setting up apt (leave it as is)
+export CODE_NAME='saucy'
+
+#The mirror to use for fetching the initial system files and for apt to use
+#when installing packages
+export MIRROR='http://archive.ubuntu.com/ubuntu'
+
+#This mirror host security updates
+export SEC_MIRROR="${MIRROR/archive/security}"
+
+#This is the package name for the kernel the LiveCD will use
+export KERNEL="linux-image-generic"
+
+#These are the header files for the above kernel
+export HEADERS="$(echo $KERNEL | sed 's/image/headers/')"
+
+export LOG="$PWD/lfs-cd.log"
+if [ -f $LOG ] ; then rm -f $LOG ; fi
+
+#This function displays information messages using a green font.
+#param: The message to display.
+#usage: info "This is some information"
+function info {
+    echo -e "\033[1;32m$@\033[0;49m"
+    echo "INFO:    $@" >> $LOG
+}
+
+#This function displays warnings in a yellow font.
+#param: The message to display.
+#usage: warn "This is a warning"
+function warn {
+    echo -e "\033[1;33mWARNING: $@\033[0;49m"
+    echo "WARNING: $@" >> $LOG
+}
+
+#This function is used to cleanly exit the script. It does this by unmounting
+#all devices, displaying a given error message, and exiting with an error
+#code.
+#param: The error message to display.
+#usage: die "This is an error"
+function error_exit {
+    unmount_all
+
+    #Create the line of asterisks
+    stars=$( printf '%0.1s' "*"{1..75} )
+
+    printf "\n\033[1;31m$stars\n\n"
+
+    #Print out message, limit the line length to 70 chars
+    echo -e "$@" | fold -s -w 70
+    echo "DIE:     $@" >> $LOG
+
+    printf "\n$stars\033[0;49m\n"
+    exit 1
+}
+
+#Trap the killer signals so that we can exit with a good message
+trap "error_exit 'Received signal SIGHUP, exiting.'" SIGHUP
+trap "error_exit 'Received signal SIGINT, exiting.'" SIGINT
+trap "error_exit 'Received signal SIGTERM, exiting.'" SIGTERM
+
+#Alias the function so that it will print a message with the following format:
+#prog-name(@line#): message
+#We have to explicitly allow aliases, we do this because they make calling the
+#function much easier (see example)
+shopt -s expand_aliases
+alias die='error_exit "Error ${0}(@`echo $(( $LINENO - 1 ))`):"'
+
+#This function checks that a given device or path is mounted, and if the
+#parameter is, this function then unmounts it.
+#param: A mount point or device file
+#usage: unmount /some/directory
+function unmount {
+    if grep -q $1 /etc/mtab ; then
+        if ! umount -v -f $1 ; then
+            warn "Failed to unmount $1, trying last resort unmount"
+            #Try lazy unmounting as a last resort
+            if ! umount -v -l $1 ; then
+                warn "Failed to unmount $1!"
+            else
+                warn "Lazy unmounted $1"
+            fi
+        else
+            info "Unmounted $1"
+        fi
+    else
+        info "$1 is not mounted"
+    fi
+}
+
+#This function unmounts all the mount-points created in this script.
+#It is used to clean-up at the end or after an error occurs. This
+#function does not check "devices" it instead calls the unmount
+#function using mount points.
+function unmount_all {
+    unmount $CHROOT/sys
+    unmount $CHROOT/proc
+    unmount $CHROOT/dev/pts
+    unmount $CHROOT/dev
+    unmount $CHROOT/tmp
+
+    if [[ ! -z "$MNT" ]] ; then
+        unmount "$MNT"
+        rmdir -v "$MNT" #MNT is a mktemp directory so get rid of it
+    fi
+}
+
+#See if we are the root user
+if [[ "$UID" != "0" ]] ; then
+    die 'This script can only be run as root'
+fi
+
+#Set the build mode
+BUILD="iso"
+
+info "Will build the iso file: $ISO"
+
+#Change the DEFFILES variable to an absolute directory
+export DEFFILES="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)/$DEFFILES"
+if [[ ! -d $DEFFILES ]] ; then
+    die "The $DEFFILES directory does not exist, try changing the configuration value at the top of the script."
+else
+    info "Will look for default files in $DEFFILES"
+fi
+
+if false ; then #DEBUG
+
+#Make sure the mkisofs program is available so we can create the ISO file
+if ! which mkisofs > /dev/null ; then
+    warn "The mkisofs program is not installed, installing it..."
+    if ! apt-get install -y genisoimage ; then
+        die "Could not install the genisoimage package (to get mkisofs)"
+    fi
+fi
+
+#Clear out the ISO build directory if it exists
+if [[ -e "$ISO_BUILD" ]] ; then
+    info "Removing old ISO build directory"
+    rm -rf "$ISO_BUILD"
+fi
+
+info "Checking that the main apt mirror is working"
+if ! wget "$MIRROR" -O /dev/null ; then
+    die "The mirror $MIRROR appears to be down or invalid"
+else
+    info "Apt mirror is working"
+fi
+
+info "Checking the security updates mirror is working"
+if ! wget "$SEC_MIRROR" -O /dev/null ; then
+    die "The mirror $SEC_MIRROR appears to be down or invalid"
+else
+    info "Security mirror is working"
+fi
+
+info "Unmounting pseudo-filesystems if they are mounted from previous attempt"
+unmount_all
+
+#If the $CHROOT directory exits, destroy it so we have a clean slate.
+if [ -d $CHROOT ] ; then
+    info "Clearing $CHROOT for a clean slate ..."
+    if ! rm -rf "$CHROOT" ; then
+        die "Could not remove the directory"
+    fi
+fi
+
+info "Creating the $CHROOT directory"
+if ! mkdir -p "$CHROOT" ; then
+    die "Could not create the chroot directory at $CHROOT"
+fi
+
+#This program creates a minimal linux system
+if [ ! -f /usr/sbin/debootstrap ] ; then
+    warn "Installing deboostrap so we can create a minimal system"
+    if ! apt-get -y install debootstrap ; then
+        die "Could not install debootstrap"
+    fi
+fi
+
+#Syslinux is going to be the boot loader, make sure it is available
+if [ ! -e /usr/lib/syslinux/isolinux.bin ] ; then
+    warn "The syslinux package is not installed, installing it..."
+    if ! apt-get -y install syslinux; then
+        die "Could not install the syslinux package"
+    fi
+fi
+
+#Extlinux is the boot loader for USB installs
+if ! which extlinux > /dev/null ; then
+    warn "The extlinux package is not installed, installing it..."
+    if ! apt-get -y install extlinux; then
+        die "Could not install the extlinux package"
+    fi
+fi
+
+info 'Bootstrapping in a basic system'
+if ! /usr/sbin/debootstrap --arch "$ARCH" "$CODE_NAME" "$CHROOT" "$MIRROR" ; then
+    die 'Failed to bootstrap'
+fi
+
+#Copy the timezone info from the system to the new USB drive
+if ! cp /etc/timezone "$CHROOT/etc/timezone" ; then
+    die 'Failed to update the /etc/timezone file'
+fi
+
+#Set some important networking configuration files
+info "Set $CHROOT/etc/hostname"
+HOST="usb"
+if ! echo -n $HOST > $CHROOT/etc/hostname ; then
+    die "Failed to update the /etc/hostname file"
+fi
+
+if ! echo "127.0.0.1 localhost $HOST" > $CHROOT/etc/hosts ; then
+    die 'Failed to create the /etc/hosts file'
+fi
+
+info 'Creating the sources.list file for apt'
+cat >$CHROOT/etc/apt/sources.list  <<EOF
+
+deb $MIRROR ${CODE_NAME} main restricted universe multiverse
+deb $SEC_MIRROR ${CODE_NAME}-security main restricted universe multiverse
+EOF
+
+if [[ ! -e $CHROOT/etc/apt/sources.list ]] ; then
+    die "Failed to create $CHROOT/etc/apt/sources.list file"
+fi
+
+info "Mounting the needed directories under $CHROOT"
+if ! (mount -v --bind /dev $CHROOT/dev &&
+      mount -vt devpts devpts $CHROOT/dev/pts -o gid=5,mode=620 &&
+      mount -vt proc proc $CHROOT/proc &&
+      mount -vt sysfs sysfs $CHROOT/sys &&
+      mount -vt tmpfs tmpfs $CHROOT/tmp ) ; then
+    die 'A mount failed!'
+fi
+
+fi #DEBUG
+
+info "Copying over needed files from $DEFFILES"
+if ! cp -v $DEFFILES/fstab $CHROOT/etc/fstab ; then
+    die "Failed to create $CHROOT/etc/fstab file"
+elif ! cp -v $DEFFILES/kernel-img.conf $CHROOT/etc/kernel-img.conf ; then
+    die "Failed to copy the $CHROOT/etc/kernel-img.conf file"
+elif ! cp -v $DEFFILES/vimrc $CHROOT/root/.vimrc ; then
+    die "Failed to copy the $CHROOT/root/.vimrc file"
+elif ! cp $CHROOT/root/.vimrc $CHROOT/etc/skel/ ; then
+    die "Failed to copy the .vimrc file to $CHROOT/etc/skel"
+elif ! cp -v $DEFFILES/preselects $CHROOT/root/conf ; then
+    die "Failed to copy the pre-selections file."
+fi
+
+info 'Creating an installer script for chroot'
+if ! cat > $CHROOT/chroot-install <<EOF
+#!/bin/bash -e
+
+function info {
+    echo -e "\033[1;34m\$@\033[0;49m"
+}
+
+function die {
+    echo -e "\n\033[1;31m\$@\033[0;49m"
+    exit 128
+}
+
+info "Beginning chroot install"
+
+#Unmount the directories when exiting out
+trap "{ umount -lv /proc /sys /tmp /dev; exit 255 }" SIGINT SIGTERM
+
+info "Setting local time"
+ln -svf /usr/share/zoneinfo/US/Central /etc/localtime
+
+info 'Setting up the root user'
+if grep -q admin /etc/group ; then
+    sed -i '/^admin.*$/d' /etc/group
+fi
+groupadd admin
+usermod -a -G 'users,plugdev,audio,cdrom,disk' root
+passwd -d root #Make root have no password
+
+info 'Preseeding for apt'
+if ! debconf-set-selections /root/conf ; then
+    die "Failed to preseed apt"
+fi
+
+rm -v /root/conf
+
+#export DEBIAN_FRONTEND=noninteractive
+
+apt-get clean
+apt-get update || apt-get update
+
+if ! apt-get -y --no-install-recommends install $KERNEL ; then
+    die "Failed to install the kernel"
+fi
+
+if ! apt-get -y install $HEADERS dhcpcd squashfs-tools  \
+                   dialog mingetty vim-nox wget jfsutils \
+                   parted gpm laptop-detect debootstrap less  \
+                   initramfs-tools live-boot locales \
+                   debconf-utils hicolor-icon-theme $EXTRAS ; then
+    die "Failed to install all of the required software"
+fi
+
+#Try installing Virtualbox's Guest additions in case
+#we use the system in a VM
+info "Installing Virtualbox's Guest Additions"
+wget -q http://download.virtualbox.org/virtualbox/debian/oracle_vbox.asc -O- | sudo apt-key add - && apt-get update && apt-get -y install virtualbox-guest-utils
+
+info "Updating the system"
+apt-get -y dist-upgrade && apt-get -y autoremove
+
+info "Cleaning up after apt"
+apt-get -y clean
+
+#Force a black listing of the old pc-speaker driver
+echo blacklist snd-pcsp >> /etc/modprobe.d/blacklist.conf
+
+info Fixing sudoers file
+if ! cp -v /etc/sudoers /tmp/sudoers.tmp ; then
+    die 'Could not copy sudoers to begin no password change'
+elif ! sed -i 's/^%admin.*$/%admin ALL=NOPASSWD:ALL/' /tmp/sudoers.tmp ; then
+    die 'Could not replace ALL with NOPASSWD field in admin.'
+elif ! sed -i 's/^%sudo.*$/%sudo ALL=NOPASSWD:ALL/' /tmp/sudoers.tmp ; then
+    die 'Could not replace ALL with NOPASSWD field in sudoers.'
+elif ! mv -v /tmp/sudoers.tmp /etc/sudoers ; then
+    die 'Could not replace sudoers file with new one.'
+fi
+
+info "Making root own /root"
+chown -R root:root /root
+
+info "Fixing the path"
+
+
+#Make mingetty auto-login on tty1
+sed 's|^exec.*$|exec /sbin/mingetty --autologin root --noclear tty1|' -i /etc/init/tty1.conf
+
+info "Finished chroot script sucessfully"
+exit 0
+EOF
+then
+    die "Could not create the script that manages the chroot install."
+fi
+
+#Make the install script executable
+if ! chmod u+x $CHROOT/chroot-install ; then
+    die "Could not make the chroot install script executable."
+fi
+
+info 'Performing chroot install ...'
+if ! LANG=C chroot $CHROOT /chroot-install ; then
+    die "Chroot install failed!"
+fi
+
+if ! cp -v "$DEFFILES/bashrc" "$CHROOT/root/.bashrc" ; then
+    die "Failed to copy the new bashrc file to /root"
+fi
+
+#For some reason the chroot changes the host environment's hostname
+#value. This is to change it back.
+info "Fixing host's hostname"
+if ! hostname $( cat /etc/hostname ) ; then
+    warn "Could not fix host environment's hostname"
+fi
+
+#Cleanup the install script
+if ! rm $CHROOT/chroot-install ; then
+    warn "Failed to remove the chroot-install script"
+fi
+
+info 'Setting up the defults for the LXDE desktop'
+if [ ! -d "$CHROOT/root/.config" ] ; then
+    if ! mkdir -vp "$CHROOT/root/.config" ; then
+        die "Failed to make the desktop setup directory $CHROOT/root/.config"
+    fi
+fi
+
+if ! tar xf "$DEFFILES/lxconfig.tar.bz2" -C "$CHROOT/root/.config" ; then
+    die "Could not install the desktop configuration files"
+fi
+
+info Setting slim to auto-login
+cat >> $CHROOT/etc/slim.conf <<EOF
+default_user        root
+auto_login          yes
+EOF
+
+#Switch the the root user's desktop to make things easier
+if [ ! -d $CHROOT/root/Desktop ] ; then
+    mkdir -p $CHROOT/root/Desktop
+fi
+
+pushd $CHROOT/root/Desktop > /dev/null
+
+if [ -d './LFS' ] ; then
+    rm -rf './LFS'
+fi
+
+info 'Downloading and installing the LFS book for off line reading.'
+if ! wget "http://www.linuxfromscratch.org/lfs/downloads/stable/$BOOK_ZIP" ;
+then
+    die 'Failed to download the LFS book'
+fi
+
+if ! tar xf "$BOOK_ZIP";  then
+    die 'Failed to unarchive the book file'
+fi
+
+if ! rm -vf "$BOOK_ZIP" ; then
+    warn "Could not remove the $BOOK_ZIP file."
+fi
+
+if ! mv "$(find . -maxdepth 1 -type d | tail -n 1)" "LFS" ; then
+    warn 'Failed to rename the unzipped book directory to LFS'
+fi
+
+info "Creating a webpage that redirects to the class' Notes website"
+if ! cp -v "$DEFFILES/notes.html" "Class Notes.html" ; then
+    die "Could not place the Class Notes.html file on the desktop"
+fi
+
+#Return to the original directory
+popd > /dev/null
+
+#udev is attached to *this* machine's network card now.
+#Get rid of this rule to make udev think it is a brand new install
+info 'Fixing udev network card rules'
+if [ -e /media/chroot/etc/udev/rules.d/70-persistent-net.rules ] && \
+     ! rm /media/chroot/etc/udev/rules.d/70-persistent-net.rules ; then
+    warn "Could not fix network card udev rules"
+fi
+
+#By default the interfaces file has allow-hotplug instead of
+#the auto keyword. The allow-hotplug won't allow the network
+#card to start. We need the interfaces file to be modified
+#before ifup is executed. So we will rewrite part of the
+#networking startup script to fix the interfaces file
+#just before ifup is executed.
+info "Fixing network startup script"
+awk "
+/ifup -a/ {
+    print \"\tsed 's/allow-hotplug/auto/' /etc/network/interfaces > /tmp/interfaces\" ;
+    print \"\tmv /tmp/interfaces  /etc/network/interfaces\"
+}
+
+{print \$0}" "$CHROOT/etc/init.d/networking" > /tmp/networking
+mv -v "/tmp/networking" "$CHROOT/etc/init.d/networking"
+chmod -v 755 "$CHROOT/etc/init.d/networking"
+
+#We will shrink the size of the ISO by zeroing out documentation
+#and log files.
+info 'Discovering what files to zero out...'
+if ! (find $CHROOT/usr/share/doc -type f -size +1b > /tmp/commit_zerosize   &&
+      find $CHROOT/usr/share/man -type f -size +1b >> /tmp/commit_zerosize  &&
+      find $CHROOT/usr/share/info -type f -size +1b >> /tmp/commit_zerosize &&
+      find $CHROOT/var/log -type f -size +1b >> /tmp/commit_zerosize  ) ; then
+    die "Could not find files to zero out"
+fi
+
+info 'Making the man, doc, and info files have zero size ...'
+NFILES="$(wc -l /tmp/commit_zerosize | awk '{ print $1 }')"
+i=1
+cat /tmp/commit_zerosize | while read file ; do
+    echo -n -e "\tZeroing $i/$NFILES files\r"
+    rm $file
+    touch $file
+    i=$[i + 1]
+done ; echo
+
+#Get rid of any left over deb files to further reduce the ISO size
+info 'Getting rid of any left over deb files'
+rm -rf $CHROOT/var/cache/apt/archives/*
+
+info "Creating the root user's Desktop directory"
+if [ ! -d "$CHROOT/root/Desktop" ] ; then
+    mkdir "$CHROOT/root/Desktop"
+fi
+
+#Tell squashfs not to include these files or directories
+info 'Creating directory-exclusion file'
+if ! cp -v "$DEFFILES/exclude" "$CHROOT/tmp/exclude" ; then
+    die 'Could not install the squashfs exclusion file'
+fi
+
+info 'Creating the file system file.'
+if ! chroot "$CHROOT" /usr/bin/mksquashfs / /filesystem.squashfs -noappend -always-use-fragments -wildcards -ef /tmp/exclude -processors 4; then
+    die "Failed to squash the file system."
+fi
+
+#fi #DEBUG
+##########################################################################
+#
+# Create ISO Image File
+#
+##########################################################################
+info "Creating directories for the ISO image."
+if ! mkdir -pv "$ISO_BUILD"/{isolinux,live,boot} ; then
+    die "Could not create directories for ISO filesystem at $ISO_BUILD"
+fi
+
+info "Installing $ISO files for booting"
+if ! cp -v "$CHROOT/filesystem.squashfs" "$ISO_BUILD/live/" ; then
+    die "Could not copy the filesystem.squashfs file to the CD."
+elif ! cp -vR "$CHROOT/boot" "$ISO_BUILD/" ; then
+    die "Could not copy the boot directory."
+fi
+
+#Install the boot loader
+info 'Installing the bootloader files'
+if ! cp -v /usr/lib/syslinux/isolinux.bin "$ISO_BUILD/isolinux" ; then
+    die "Could not install the isolinux bootloader"
+fi
+
+#mkisofs borks file names with hyphens, it silently changes them to
+#underscore characters. We have to take this into account below.
+#That is the reason for the sed pipeline in this config file.
+info "Creating the isolinux configuration file"
+pushd $CHROOT > /dev/null
+
+info "Install the isolinux.cfg file"
+if ! cp -v "$DEFFILES/isolinux.cfg" "$ISO_BUILD/isolinux/isolinux.cfg" ; then
+    die "Could not install the boot loader configuration file"
+fi
+
+info "Puting actual file names in isolinux.cfg"
+sed -i -e "s/vmlinuz/$(basename $ISO_BUILD/boot/vmlinuz* | tr - _)/" \
+       -e "s/initrd/$(basename $ISO_BUILD/boot/initrd* | tr - _)/" \
+       "$ISO_BUILD/isolinux/isolinux.cfg"
+
+
+
+ISOTMP="$(dirname $ISO)/temp-$(basename $ISO)"
+info "Creating the iso file $ISOTMP"
+if mkisofs -o "$ISOTMP" -allow-multidot \
+      -l -b isolinux/isolinux.bin -c isolinux/boot.cat \
+      -no-emul-boot -boot-load-size 4 -boot-info-table \
+      "$ISO_BUILD" ; then
+    info "Created the ISO file"
+else
+    die "Failed to create the ISO file"
+fi
+
+info "Installing ISO at the final location"
+mv -v "$ISOTMP" "$ISO"
+
+info 'Installation Finished Successfully!!!'
+info "ISO file $ISO"

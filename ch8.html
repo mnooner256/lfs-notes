@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LFS Install Notes</title>
+  <meta charset="UTF-8">
+  <link type="text/css" rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Chapter 8 Installing Basic System Software</h1>
+  </header>
+  <article>
+  <section class="intro">
+    <p>As with chapter seven, this chapter's notes are broken up
+    by section. So read each section's notes before doing what is listed in
+    that section of the book.</p>
+  </section>
+
+  <section>
+    <h2>8.2 Creating the /etc/fstab File</h2>
+    <p>You should read this section carefully. The information contained
+    within this section is extremely useful. To fill in the appropriate
+    entries inside the <span class="file">/etc/fstab</span> file, recall how
+    we partitioned the system in chapter two (check the chapter two notes if
+    you forgot). Notice our layout is completely different than what is talked
+    about in the book. Be sure to still mount
+    <span class="file">/dev/sdb1</span> at
+    <span class="file">/sources</span> we will need it later. I am leaving it
+    as an exercise for you to figure out a working
+    <span class="file">/etc/fstab</span> file.</p>
+  </section>
+
+  <section>
+    <h2>8.3 Building The Kernel</h2>
+    <p>Building a Linux kernel is extremely easy. However, getting a kernel
+    that works correctly can be pretty tough. Normally you would need to make
+    sure that all your hardware's drivers would be loaded properly. Luckily,
+    because we are using a VM, I can know what drivers are needed. We are
+    going to build a monolithic kernel, i.e. a kernel with everything built
+    in. The reason being that it will cut the number of possible errors that
+    can occur by two-thirds.</p>
+
+    <p>Carefully follow the directions up to the second <code>make</code>.
+    Here you will need to make various menu selections to create a working
+    kernel. Carefully go through the listing below an make sure that each
+    option listed is selected. Some of the options will be selected by
+    default, others you will have to turn on yourself. Make sure each option
+    is listed with an <span class="file">*</span>, except for the first option
+    which needs to be turned off.</p>
+
+    <pre class="edit">
+<span class="cmd">source /etc/profile
+make defconfig
+make LANG=$LANG LC_ALL= menuconfig</span>
+[ ] 64-bit Kernel
+Device Drivers  ---&gt;
+    Generic Driver Options --&gt;
+        [*] Maintain a devtmpfs filesystem to mount at /dev
+    Graphics Support --&gt;
+        -*- Support for frame buffer devices ---&gt;
+            <*> Userspace VESA VGA graphics support
+            [*] VESA VGA graphics support
+File systems  ---&gt;
+    &lt;*&gt; The Extended 4 (ext4) filesystem
+    [*] Use ext4 for ext2/ext3 file systems
+    [*] Ext4 POSIX Access Control Lists
+    [*] Ext4 Security Labels
+</pre>
+    <p>When you are finished making your selections, continue following the
+    book's directions.</p>
+  </section>
+
+  <section>
+    <h2>8.4 Making the LFS System Bootable</h2>
+    <p>Read this section carefully. You cannot just blindly follow the
+    examples and hope that your system will boot.</p>
+
+    <p>Ignore <cite>section 8.4.1</cite>. This rescue disk is
+    unnecessary in our case because we can use the LiveCD.</p>
+
+    <p>Use the following file for your menu list. I would recommend using
+    <code>vim</code>, instead of the <code>cat</code> entry as listed in the
+    book.</p>
+
+    <pre class="edit"><span>/boot/grub/grub.cfg</span>
+set default=0
+set timeout=3
+
+insmod ext2
+set root=(hd0,1)
+
+menuentry "GNU/Linux, LFS" {
+    linux   /boot/vmlinuz-3.5.2-lfs-7.4 root=/dev/sda1 ro vga=773
+}
+</pre>
+
+  <p>Linux virtual terminals by default will boot to a 80 character by 24 line
+  resolution (roughly 640x480 pixels). This is really, really small. To fix
+  this we compiled the kernel with frame buffer support. You turn this on with
+  the kernel cheat code <code>vga</code>. The value of the vga parameter
+  defines the color depth and resolution size. The value 773 corresponds to
+  1024x768 with 256 colors. That may be too large for some laptop monitors. You
+  can reduce it to 800x600 using code 771 instead. If the window is still too
+  big, go ahead and remove the <code>vga</code> cheat code all together.</p>
+  </section>
+  </article>
+  <footer>
+    <a id="html" href="http://validator.w3.org/check?uri=referer"
+       target="_blank">[HTML 5]</a>
+    <a id="css" href="http://jigsaw.w3.org/css-validator/check/referer?profile=css3"
+       target="_blank">[CSS 3]</a>
+  </footer>
+</body>
+</html>

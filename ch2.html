@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LFS Install Notes - Chapter 2</title>
+  <meta charset="UTF-8">
+  <link type="text/css" rel="stylesheet" href="style.css" />
+</head>
+<body>
+<article>
+<header>
+  <h1>Chapter 2 Creating the File System</h1>
+</header>
+<section class="intro">
+  <p>As we have discussed creating a proper filesystem is
+  essential to creating a Linux installation that works well. Do to the
+  limitations of our disk, you need to follow the directions below instead of
+  those found in chapter two of the book.</p>
+</section>
+
+<section>
+  <h2>Partitioning The System</h2>
+  <p>We need to come up with a good partitioning scheme first and foremost. You
+  must use the scheme below:</p>
+  <ol>
+    <li><span class="file">/dev/sda</span>
+    <ul>
+      <li>3GB for /</li>
+      <li>256MB for /home</li>
+      <li>The rest is for swap. We are using a large swap space to make
+      up for the low RAM situation.</li>
+    </ul></li>
+    <li><span class="file">/dev/sdb</span>
+    <ul>
+      <li>Everything goes to <span class="file">/mnt/lfs/source</span>.</li>
+    </ul></li>
+  </ol>
+
+  <p>As your disk stands it is essentially empty. The fdisk program may give
+  you a warning about this, just ignore it. The primary virtual hard drive
+  should be the <span class="file">/dev/sda</span> device. Below is what
+  your partition table should look like after using <code>fdisk</code> on
+  <span class="file">/dev/sda</span>.</p>
+
+  <pre class="edit"><span class="cmd">fdisk -l /dev/sda</span>
+Disk /dev/sda: 4294 MB, 4294967296 bytes
+255 heads, 63 sectors/track, 522 cylinders, total 8388608 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0xe1cc3e22
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sda1            2048     6293503     3145728   83  Linux
+/dev/sda2         6293504     6817791      262144   83  Linux
+/dev/sda3         6817792     8388607      785408   83  Linux
+</pre>
+
+  <p>Building Linux takes a lot of room. As you may have noticed our virtual
+  hard drive is very small. To make up for this deficit we are going to use
+  a seperate hard drive to do the actual compiling and to store the sources
+  code. This device should be <span class="file">/dev/sdb</span>. As mentioned
+  in the chart above, you basically want just one big partition. Below is what
+  your partition table should look like after using <code>fdisk</code> on
+  <span class="file">/dev/sdb</span>.</p>
+
+  <pre class="edit"><span class="cmd">fdisk -l /dev/sdb</span>
+Disk /dev/sdb: 4294 MB, 4294967296 bytes
+43 heads, 32 sectors/track, 6096 cylinders, total 8388608 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0xf9034dc3
+
+   Device Boot      Start         End      Blocks   Id  System
+/dev/sdb1            2048     8388607     4193280   83  Linux
+</pre>
+
+  <h2>Formatting The Filesystem</h2>
+  <p>You need to make <span class="file">/dev/sda1</span>,
+  <span class="file">/dev/sda2</span>, and <span class="file">/dev/sdb1</span>
+  use the ext4 filesystem. The <span class="file">/dev/sda3</span> partition
+  should be made into a swap partition. If you are not sure what to do, look at
+  the <a href="../lectures/filesystems.html">lecture notes</a>.</p>
+
+  <h2>Mounting the Filesystems</h2>
+  <p>In order to use the partitions we must mount them. The book assumes that
+  the installed system will be at <code>$LFS</code>. This makes it easy for
+  the book to refer to the absolute path on our system. We also need to
+  create the directories that we will use to mount the
+  <span class="file">/home</span> and <span class="file">/sources</span> (build)
+  directory. We then tell the OS to start using our new swap space.</p>
+
+  <pre class="cmd">export LFS=/mnt/lfs
+mkdir -v $LFS
+mount -v -t ext4 /dev/sda1 $LFS
+mkdir -pv $LFS/{home,sources}
+mount -v -t ext4 /dev/sda2 $LFS/home
+mount -v -t ext4 /dev/sdb1 $LFS/sources
+/sbin/swapon -v /dev/sda3</pre>
+
+  <p>There is a handy program that tells you about the space on a mounted
+  filesystem. Below is the command and the expected output. The highlighted
+  lines are the filesystems you created.</p>
+  <pre class="edit"><span class="cmd">df -h</span>
+Filesystem      Size  Used Avail Use% Mounted on
+rootfs          1.5G   30M  1.5G   2% /
+udev             10M     0   10M   0% /dev
+tmpfs           305M  544K  304M   1% /run
+/dev/sr0        433M  433M     0 100% /lib/live/mount/medium
+/dev/loop0      413M  413M     0 100% /lib/live/mount/rootfs/filesystem.squashfs
+tmpfs           1.5G     0  1.5G   0% /lib/live/mount/overlay
+tmpfs           1.5G     0  1.5G   0% /lib/live/mount/overlay
+aufs            1.5G   30M  1.5G   2% /
+tmpfs           5.0M     0  5.0M   0% /run/lock
+tmpfs           609M     0  609M   0% /run/shm
+tmpfs           1.5G   20K  1.5G   1% /tmp
+tmpfs           1.5G     0  1.5G   0% /var/tmp
+<mark>/dev/sda1       2.9G  4.6M  2.8G   1% /mnt/lfs
+/dev/sda2       240M  2.1M  222M   1% /mnt/lfs/home
+/dev/sdb1       3.9G  8.0M  3.7G   1% /mnt/lfs/sources</mark>
+</pre>
+
+  <p>Why are the sizes different than expected? The reason is that fdisk rounds
+  sizes down to the nearest cylinder. This means that sizes usually come up a
+  little smaller than expected. Furthermore, the meta-data for the filesystem
+  takes up space. This fine for our case.</p>
+
+  <p>This would be a good time to take your first snapshot.</p>
+</section>
+</article>
+<footer>
+    <a id="html" href="http://validator.w3.org/check?uri=referer"
+       target="_blank">[HTML 5]</a>
+    <a id="css" href="http://jigsaw.w3.org/css-validator/check/referer?profile=css3"
+       target="_blank">[CSS 3]</a>
+</footer>
+</body>
+</html>

@@ -1,0 +1,178 @@
+/* Import Fonts */
+@import url(http://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700);
+@import url(http://fonts.googleapis.com/css?family=Ledger);
+@import url(http://fonts.googleapis.com/css?family=Economica);
+@import url(http://fonts.googleapis.com/css?family=Droid+Sans:400,700);
+
+body {
+  font-size:13pt;
+  font-family:'Droid Sans',Arial,sans-serif;
+}
+
+h1,h2,h3,h4,#author {
+  color:#880000;
+  font-family:'Ledger', serif;
+}
+
+header, #author {
+    text-align:center;
+}
+
+header h1 {
+  margin-bottom:0px;
+}
+
+header h2 {
+  margin-top:0px;
+}
+
+h1 {
+  font-size:2em;
+}
+
+section h2 {
+  margin-top:2em;
+  font-size:1.5em;
+  border-top:1px solid #D9CACA;
+}
+
+h3 {
+  font-size:1.25em;
+}
+
+h4 {
+  margin-bottom:0px;
+  padding-bottom:0px;
+}
+
+p,ul,ol,h4 {
+  margin-left:2em;
+  margin-right:.5em;
+  text-align:justify;
+}
+
+code, kbd, figure {
+  font-size:1.2em;
+}
+
+ol {
+  list-style:number;
+}
+
+ol ol {
+  list-style:lower-alpha;
+  margin-left:0px;
+}
+
+kbd {
+  font-family:'Economica',fantasy;
+}
+
+.center {
+  text-align:center;
+}
+
+code, .cmd, .edit, .file, figure {
+  font-family: 'Ubuntu Mono', monospace;
+}
+
+code, .cmd, .edit .cmd, figcaption {
+  font-weight:bold;
+  color:#333;
+}
+
+figure {
+  text-align:center;
+}
+
+figure img {
+  border:thin solid #333;
+}
+
+
+.intro p, .intro ul, .intro ol, .intro table {
+  margin-left:0em;
+}
+.cmd,.edit {
+  margin-left:3em;
+  margin-right:.5em;
+  padding:.5em;
+}
+
+.edit {
+  background-color:white;
+  color:black;
+  border:thin solid black;
+  padding-top:0px;
+}
+
+.edit span {
+  background-color:#880000;
+  color:white;
+  margin-left:-.5em;
+  margin-right:-.5em;
+  margin-bottom:-.5em;
+  font-weight:bolder;
+  padding:.5em;
+  display:block;
+}
+
+.cmd,.edit .cmd {
+  background-color:#EEE;
+  border:thin dotted black;
+}
+
+.edit .cmd {
+  border:none;
+  border-bottom:thin dotted black;
+}
+
+li {
+  margin-bottom:.5em;
+}
+
+/* Table Style */
+table {
+  border-collapse: collapse;
+}
+
+td {
+  border:thin solid black;
+  padding:.5em;
+}
+
+.borderless td {
+  border:none;
+}
+
+thead {
+  background-color:#880000;
+  color:white;
+  text-align:center;
+  font-weight:bold;
+}
+
+th {
+  border:none;
+  text-align:center;
+  font-weight:bold;
+  background-color:white;
+  color:black;
+}
+
+
+/* Validator Links */
+footer {
+  color: #CCC;
+  text-align: right;
+  margin-top:3em;
+}
+
+footer a, footer a:visited, footer a:active {
+  text-decoration: none;
+  color: #CCC;
+}
+
+footer a:hover {
+  color: #888;
+}

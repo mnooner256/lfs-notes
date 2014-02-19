@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>LFS Install Notes</title>
+    <meta charset="UTF-8">
+    <link type="text/css" rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <header>
+        <h1>LFS Build Notes</h1>
+        <p id="author">Michael Nooner</p>
+    </header>
+    <article>
+    <section class="intro">
+    <p>This page can be found at the URL:
+    <a href="http://sun0.cs.uca.edu/Linux/static/lfs/">
+    http://sun0.cs.uca.edu/Linux/static/lfs/</a></p>
+
+    <p>Remember that Linux is just the kernel. You, in fact,
+    mostly interact with the user land of the system. How the kernel and
+    user land are related is a complex issue, the two are so inseparable that
+    the term Linux has come to mean Linux kernel + GNU user land. To get a
+    deeper understanding of what exactly goes into a Linux distribution, we are
+    going to build a <em>Linux from Scratch</em> (LFS) system.  As you build
+    the system you will quickly come to appreciate how complex a system Linux
+    really is.</p>
+
+    <p>Ideally you would install LFS on an actual computer. This can be a
+    problematic since you will have work to do in other classes
+    and you don't want your computer to be down for several weeks. With this in
+    mind, we are going to install our system on a <em>virtual machine</em>
+    (VM).</p>
+
+    <p>There are several advantages to using VMs for an LFS install. First, you
+    can perform the installation without corrupting your current operating
+    system. In other words, messing up will not trash your system. This
+    allows us to experiment more freely with less penalty for failure. Another
+    advantage of using a virtual machine system is that you can backup the
+    machine using snapshots. That way if you badly corrupt your LFS
+    installation, you can restore back to a functioning system. Finally, by
+    using a VM I know exactly what hardware you are using. This makes it much
+    easier to diagnose problems if you encounter them. Many of these notes are
+    predicated on the idea you are using the VM's virtual hardware.</p>
+
+    <p>There is a major drawback to using a VM, the installation can be much
+    slower compared to installing LFS on an actual machine. Running even a
+    cut-down Linux distribution smoothly in a VM can take a fairly hefty
+    machine. In other words, what would normally be a <strong>very</strong>
+    responsive install on an actual machine may crawl on a VM. Worse, because
+    you may be communicating with the virtual hard-drive through USB things will
+    slow down quite a lot. We will discuss these issues in quite a
+    bit of depth as we go along.</p>
+
+    <p>Please note that these notes are updated frequently. As people run into
+    problems, I update the notes to help others avoid those problems. That
+    means you should always view the "live" notes from the class's website.</p>
+  </section>
+
+  <section>
+    <h2>Due Dates</h2>
+    <ul>
+      <li>Chapters 1-4, Wednesday February 21</li>
+      <!--
+      <li>Chapter 5, Friday March 11 (<a href="ch5_check">chapter check
+      script</a>)</li>
+      <li>Chapter 6, Monday March 25
+      (<a href="ch6_check">chapter check script</a>), download it to
+      <span class="file">/mnt/lfs</span>, and run it in the chroot
+      environment</li>
+      <li>Finished, April 19th</li>
+      -->
+    </ul>
+  </section>
+
+    <section>
+    <h2>Table of Contents</h2>
+
+    <ol style="list-style:none;">
+      <li><a href="preface.html">Preface</a> &mdash; This is a helpful
+      guide to understanding how to effectively use these notes. (This
+      chapter is not part of the LFS book)</li>
+      <li><a href="started.html">Getting Started</a> &mdash; This chapter
+      contains the steps needed for getting started using the VM. (This
+      chapter is not part of the LFS book)</li>
+
+      <li>Chapter 1: Introduction &mdash; There are no notes for this
+        chapter, but you should still read it.</li>
+      <li><a href="ch2.html">Chapter 2: Preparing the Filesystem</a> &mdash;
+        You should follow these notes in lieu of reading the chapter. Here we
+        will create our filesystems on the hard drive.</li>
+      <li><a href="ch3.html">Chapter 3: Packages and Patches</a> &mdash; In
+      this chapter we will get the packages and patches we need for our system
+      onto our hard drive. You should follow these notes instead of the chapter
+      in the book.</li>
+      <li><a href="ch4.html">Chapter 4: Final Preparation</a> &mdash; There
+      are a couple of alterations necessary for this chapter.</li>
+      <li><a href="ch5.html">Chapter 5: Constructing a Temporary System</a>
+        &mdash; This set of notes contains some helpful hints to help you
+        succeed in finishing chapter five.</li>
+      <li><a href="ch6.html">Chapter 6: Installing Basic System Software</a>
+        &mdash; Much like chapter five's notes, this page will help you
+        sucessfully install your basic system.</li>
+      <li><a href="ch7.html">Chapter 7: Setting Up System Bootscripts</a>
+        &mdash; These notes contain additional and substitute information for
+        chapter seven.</li>
+      <li><a href="ch8.html">Chapter 8: Making the LFS System Bootable</a>
+        &mdash; These notes give additional information for what is often the
+        hardest chapter in the book.</li>
+      <li><a href="ch9.html">Chapter 9: The End</a>
+        &mdash; These notes help you determine if you were successful in
+        building your LFS system or not.</li>
+      <!--
+      <li><a href="grade.html">Grading!!!!</a>
+        &mdash; The directions and notes for earning a grade for your hard
+        work.</li>
+      -->
+    </ol>
+    </section>
+    </article>
+    <footer>
+      <a id="html" href="http://validator.w3.org/check?uri=referer"
+         target="_blank">[HTML 5]</a>
+      <a id="css" href="http://jigsaw.w3.org/css-validator/check/referer?profile=css3"
+         target="_blank">[CSS 3]</a>
+    </footer>
+
+  </body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>LFS Install Notes</title>
+<meta charset="UTF-8">
+<link type="text/css" rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header>
+  <h1>Getting Started</h1>
+</header>
+<article>
+  <section class="intro">
+    <p>In this section we will create the virtual machine files. We will
+    also boot the virtual machine into our build environment.</p>
+  </section>
+
+  <section>
+    <h2>Preliminaries</h2>
+    <p>Before we can actually create the VM, some things you need
+    to take care of. First, we need to have a system where we can actually
+    build the software. Next, we need to analyze the host system so we can
+    optimize our VM. Choosing the optimal values for RAM and CPU cores can
+    significantly decrease the build time.</p>
+
+    <h3>Build Environment</h3>
+    <p>I have created a fairly nice environment for us to use while building
+    LFS. It is a custom LiveCD I created using much of the knowledge I gained
+    form the first time I created LFS. The CD has all of the prerequisite
+    software installed. So you will able to start right away.</p>
+
+    <p>You can download the file below. Remember, put it on the machine's hard
+    drive!</p>
+
+    <p style="text-align:center">
+      Download: <a href="./lfs-cd.iso" class="file">lfs-cd.iso</a>
+    </p>
+
+    <h3>Calculate the amount of RAM</h3>
+
+    <p>Building software is a RAM intensive process. This is one area where
+    throwing RAM at the problem will make a huge difference. This is an
+    important and complex issue, so read the following carefully and make
+    sure  that you understand the issues completely.</p>
+
+    <p>When using <em>Windows</em>, this value <strong>must</strong> be
+    set to <em>25%</em> of the total available RAM.  This is why you need at
+    least 2GB of main memory on your physical machine.</p>
+
+    <p>Linux and Macs, on the other hand, are not as resource intensive, so you
+    can raise this up to 50% of your total main memory. This assumes you are
+    not going to be using the physical machine for anything else while you
+    are running the LFS virtual machine.</p>
+
+    <p>The problem is that this value should not change between the
+    different physical machines you are going to use this VM on. So if you
+    plan on doing <strong>any work</strong> on a different machine you
+    <strong>must</strong> set this value to the appropriate
+    <strong>minimum</strong> value. For example, if you are going to build
+    LFS on an Ubuntu Linux machine with 4GB of RAM, and work on it at
+    school on a Windows machine 3GB of RAM, set the virtual machine's RAM to
+    <em>768MB</em>.</p>
+
+    <p>For simplicities sake, we are going to build a 32-bit operating system.
+    The main effect of this decision is that the OS cannot access any RAM
+    greater than 3GB. In other words, <strong>3GB is the maximum</strong> amount
+    of RAM you can use.</p>
+
+    <p>After you have decided on how much RAM to use, write it down.</p>
+
+    <h3>Determining The Number of Cores</h3>
+    <p>You can compile much of LFS in parallel. This means you can take
+    advantage of the multi-core nature of modern computers. Virtualbox only
+    allows you to use multiple cores if your host computer has Vt-x or AMD-V
+    enabled.</p>
+
+    <p>On most AMD multi-core machines, AMD-V is available. Unfortunately,
+    Intel segments its processor pricing partially based on have Vt-x or not.
+    This means it is difficult to predict if a particular processor has Vt-x
+    or not. To further complicate the issue, many commodity motherboards disable
+    these visualization extensions in the BIOS.</p>
+
+    <p>You best bet is to try turning on the extensions in the VM's settings.
+    VirtualBox should complain if it cannot access the extensions.</p>
+
+    <p>The easiest way to find out if the extensions are available is to
+    google for your processor's model and Vt-x or AMD-V. You should be able to
+    determine if they are available on the processor. If it is available,
+    but VirtualBox cannot access the extension, then it is probably disabled
+    in your motherboard's BIOS. Try finding a setting that will enable it.</p>
+  </section>
+
+  <section>
+    <h2>Creating the VM</h2>
+    <p>LFS is going to need to be installed into a new virtual machine. Start
+    by clicking the <button>New</button> button in VirtualBox.
+    <ol>
+      <li>Set the VM's name to "<em>lfs</em>" and set the OS type to "<em>Linux
+      2.6/3.x</em>"</li>
+      <li>Set the amount of RAM to the value you wrote down a minute ago. Be
+      sure to use proper 2<sup>n</sup> number, i.e. 1GB = 1024.</li>
+      <li>We now need to create our virtual machine's hard drive.
+      <ol>
+        <li>Make the image a VDI file (default).
+        <li>Make the image a dynamically expanding (default), this option works
+        best on USB.</li>
+        <li>The image name should be "<em>lfs</em>" (the default). The disk
+        should be 4GB in size.</li>
+      </ol></li>
+    </ol>
+
+    <p>Our VM is created, but we are not done yet. We are going to need a
+    special "build" hard drive and we need it to boot off of a ISO
+    image.
+    <ol>
+      <li>Select <span class="file">lfs</span> from the VM list and click the
+      <button>Settings</button>.</li>
+
+      <li>Click <em>System</em> to bring up the system management page.</li>
+
+      <li>Click the <em>Processor</em> tab to and make sure <strong>Enable
+      PAE/NX</strong> is checked.</li>
+
+      <li>If you have the Vt-x or AMD-V extension enabled, you need to do the
+      following. Set the number of processors, on the <em>Processor</em> tab,
+      to 50% of your system's physical cores. On the <em>Motherboard</em> tab,
+      check the <strong>Enable I/O ACPI</strong> box. Finally, on the
+      <em>Acceleration</em> tab, make sure both boxes are checked.</li>
+
+      <li>Click <em>Storage</em> in the left panel to bring up the
+      storage page.</li>
+
+      <li>Under <q>Controller: IDE</q> click on the empty CDROM entry.</li>
+
+      <li>On the right hand side, click on CD icon to bring up a list of known
+      ISO files. Your list is probably empty. Click the
+      <strong>Choose a virtual CD/DVD disk file.</strong>
+
+      <li>You will need to select the <span class="file">
+      <a href="./lfs-cd.iso">lfs-cd.iso</a></span>
+      file you downloaded. Note, <strong>do not put this file on your USB
+      drive</strong> as this will cause a  huge loss in performance.</li>
+
+      <li>Click the <em>Controller: SATA</em> entry. Click the <strong>Add
+      Hard Disk</strong> button (second button in the highlighted entry).</li>
+      <li>In the resulting dialog box, click the <button>Create new
+      disk</button> button.
+      <ol>
+        <li>Make the image a VDI file (default).</li>
+        <li>Make the image a dynamically expanding (default), this option works
+        best on USB.</li>
+        <li>The image name should be "<em>LFS Build</em>". The disk
+        should be 4GB in size.</li>
+        <li>Click the <button>Create</button> button.</li>
+      </ol></li>
+    </ol>
+    <figure>
+      <img src="img/disk-properties.png">
+      <figcaption>Finished VM's Storage Properties</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Booting From The CD</h2>
+    <p>We are finally ready to get started! Because your VM's hard drive is
+    blank, your machine will boot from the CDROM, a.k.a the LFS ISO image file.
+    You will see a bunch of messages scroll by as the OS boots. These messages
+    are for debugging purposes in case you have trouble booting the
+    ISO file.</p>
+
+    <p>Eventually you will reach the desktop. This is an LXDE desktop. The
+    desktop has a <q>Start Menu</q> in the lower left corner of the screen.
+    I have already installed the VirtualBox Guest Additions. Hence, the screen
+    resolution should match the VM's window size.</p>
+
+    <figure>
+      <img src="img/lfs-iso-desktop.png">
+      <figcaption>LFS ISO Desktop</figcaption>
+    </figure>
+
+    <h2>Advice &mdash; Read This!!!!</h2>
+    <p>Below is some advice that I had to learn the hard way. I really
+    recommend that you read it carefully. It will save you time and quite a
+    bit of effort.</p>
+ </section>
+ <section>
+    <h3>Tips On Using VirtualBox</h3>
+    <table class="borderless"><tbody>
+      <tr>
+        <td><kbd>Host+f</kbd></td><td>&mdash;</td>
+        <td>This puts the VM in full screen mode. I highly recommend
+        that you use the VM in this mode.</td>
+      </tr>
+      <tr>
+        <td><kbd>Host+t</kbd></td><td>&mdash;</td>
+        <td>This will take a snapshot of the machine's state.</td>
+      </tr>
+    </tbody></table>
+
+    <p>One of the best features of a virtual machine is its ability to take
+    <em>snapshots</em>. A <em>snapshot</em> is a record of written to disk of
+    the virtual machine's state at the time the snapshot was taken. This
+    means basically that a image is taken of the VM's RAM and hard drive.
+    The benefit is that at any time you can revert back to a previous snap
+    shot.</p>
+
+    <p>You will mess up somewhere while creating your LFS system. Taking
+    frequent snapshots will allow you to revert back to a "good" state. You
+    can think of snapshots as "game saves." They allow you to jump backwards
+    in time to whenever you took the snapshot.</p>
+
+    <h3>Maximizing Virtual Machine Performance</h3>
+    <p>VM's by their nature run slower than an installed OS. But there are ways
+    to squeeze pretty good performance out of them. The first is to cut-down on
+    running applications in the host system. The host system's multitasking may
+    treat the VM as just any other application. When you are doing a sixty
+    minute compile, you do not want the host to give the VM the same priority
+    as Firefox. So, do not run any applications in the host while the VM is
+    running. This is not an absolute rule though. If you have a fast machine,
+    a lot of time, or copious amounts of RAM you can multi-task in the host
+    OS. I would still recommend that you do not do it on the longer and more
+    intensive compiles. The easiest way to avoid multitasking in the host OS is
+    to run VirtualBox in full-screen mode, this way you avoid the
+    temptation.</p>
+
+    <h3>The Book</h3>
+    <p>Linux from Scratch (LFS) is installed by following all the steps in a
+    book. For your convenience I have placed the book onto the desktop of the
+    LiveCD. Use that book, not the one listed on their website. The one on
+    their website gets updated frequently. The off-line copy is a stable
+    version, you are less likely to run into new bugs.</p>
+
+    <p>It is <strong>very</strong> important that you read and understand the
+    white part of the book. This is what will make up the majority of your next
+    test, so pay attention. The book is not overly long, you could read it
+    cover to cover in about five hours. Don't just blindly copy/paste the
+    steps this will cause you to fail certain steps. Realize that creating
+    a LFS system is difficult, time consuming, and error prone. You may need
+    to make multiple tries at each part before you get a working system.</p>
+
+    <p>Do to how the book has you do the steps, you need to be able to get
+    better performance out of your terminal window. Use the LXterminal (it is
+    in the shortcut bar) rather than xterm, it has more features (like a
+    working copy-paste system). LXterminal works essentially just like
+    the terminal emulator we have used in class. Here is a list of short-cuts
+    that will be of great benefit.</p>
+
+    <table class="borderless"><tbody>
+      <tr>
+        <td><kbd>Ctrl+Shift+T</kbd></td><td>&mdash;</td>
+        <td>Open a new terminal in a new tab.</td>
+      </tr>
+      <tr>
+        <td><kbd>Ctrl+PgUp</kbd></td><td>&mdash;</td>
+        <td>Cycle to the previous tab.</td>
+      </tr>
+      <tr>
+        <td><kbd>Ctrl+PgDn</kbd><td>&mdash;</td>
+        <td>Cycle to the next tab.</td>
+      </tr>
+      <tr>
+        <td><kbd>Ctrl+Shift+C</kbd></td><td>&mdash;</td>
+        <td>Copy selected text to the clipboard.</td>
+      </tr>
+      <tr>
+        <td><kbd>Ctrl+Shift+V</kbd></td><td>&mdash;</td>
+        <td>Past text from the clipboard into the current terminal at the
+        insertion point.</td>
+      </tr>
+      <tr>
+        <td><kbd>Middle&#8209;Click</kbd></td><td>&mdash;</td>
+        <td>This will paste any highlighted text into the current terminal at
+        the insertion point. You can simulate the middle-mouse button by
+        pressing both the left and right buttons simultaneously. This is
+        usually the fastest way to copy and paste.</td>
+      </tr>
+    </tbody></table>
+  </section>
+</article>
+<footer>
+    <a id="html" href="http://validator.w3.org/check?uri=referer"
+       target="_blank">[HTML 5]</a>
+    <a id="css" href="http://jigsaw.w3.org/css-validator/check/referer?profile=css3"
+       target="_blank">[CSS 3]</a>
+</footer>
+</body>
+</html>
