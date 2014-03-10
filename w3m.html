@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LFS Install Notes</title>
+  <meta charset="UTF-8">
+  <link type="text/css" rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header>
+    <h1>Using w3m</h1>
+    <p>There are several different console web browsers available for Linux.
+    I have decided that we will use w3m. The w3m web browser works differently
+    than GUI based browsers. Below is some information to help you get started
+    using the browser.</p>
+</header>
+<article>
+<section>
+<h2>Starting The Browser</h2>
+
+<p>You can use w3m to surf the web or use it to open a local HTML file. One
+of the primary uses for the browser is going to be downloading tar-balls. The
+location the files are downloaded to is by default the current directory when
+you started w3m. Therefore, I recommend that you start w3m in the
+<span class="file">/sources</span> directory.
+
+<pre class="cmd">w3m http://some.url
+w3m path/to/an/html/file</pre>
+</section>
+
+<section>
+<h2>Keyboard Commands</h2>
+<p>Console based web browsers are keyboard driven, instead of mouse driven.
+You will need to use several keyboard commands in order to navigate the using
+w3m.</p>
+
+<table class="w3m-key">
+<tr>
+    <td>Hold Shift</td><td>Shows the gpm pointer and allows you to highlight text</td>
+</tr>
+<tr>
+    <td>&darr; or j</td><td>Move down a line, but half page down at bottom of screen</td>
+</tr>
+<tr>
+    <td>&uarr; or k</td><td>Move up a line, but half page up at top of screen</td>
+</tr>
+<tr>
+    <td>Enter</td><td>Follow a hyperlink</td>
+</tr>
+<tr>
+    <td>Tab</td><td>Select next hyperlink</td>
+</tr>
+<tr>
+    <td>a</td><td>Save link as. Note, you need to use this to download
+    <span class="file">*.patch</span> files.</td>
+</tr>
+<tr>
+    <td>Shift-J</td><td>Scroll down one line</td>
+</tr>
+<tr>
+    <td>Shift-K</td><td>Scroll up one line</td>
+</tr>
+<tr>
+    <td>Shift-B</td><td>Back</td>
+</tr>
+<tr>
+    <td>Ctrl-T</td><td>Open link in new tab</td>
+</tr>
+<tr>
+    <td>Ctrl-Q</td><td>Close current tab</td>
+</tr>
+<tr>
+    <td>{</td><td>Move to previous tab</td>
+</tr>
+<tr>
+    <td>}</td><td>Move to next tab</td>
+</tr>
+<tr>
+    <td>Esc-T</td><td>Pop-up tab selection</td>
+</tr>
+</table>
+</section>
+</article>
+<footer>
+  <a id="html" href="http://validator.w3.org/check?uri=referer"
+     target="_blank">[HTML 5]</a>
+  <a id="css" href="http://jigsaw.w3.org/css-validator/check/referer?profile=css3"
+     target="_blank">[CSS 3]</a>
+</footer>
+
+</body>
+</html>
