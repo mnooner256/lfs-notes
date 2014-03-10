@@ -64,7 +64,7 @@ ol ol {
   margin-left:0px;
 }
 
-kbd {
+kbd, .w3m-key tr td:first-child {
   font-family:'Economica',fantasy;
 }
 
@@ -158,6 +158,11 @@ th {
   font-weight:bold;
   background-color:white;
   color:black;
+}
+
+.w3m-key {
+    width:90%;
+    margin:auto;
 }
 
 

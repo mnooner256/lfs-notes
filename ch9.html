@@ -15,7 +15,7 @@
     make or break time. Either your machine will boot or it won't.
     <strong>Take a snapshot before rebooting!</strong></p>
   </section>
-  
+
   <section>
     <h2>Rebooting</h2>
     <p>To reboot your machine simply click Logout in the LXDE program
@@ -31,13 +31,13 @@
     the boot scripts running through the init process. Everything should
     display a green <code style="color:#0F0">OK</code>. If not then you have
     problems. Finally, you should see a login prompt.</p>
-    
+
     <figure>
       <img src="img/console.png" width="600px">
       <figcaption>After Reboot</figcaption>
     </figure>
   </section>
-  
+
   <section>
     <h2>Problems?</h2>
     <p>If you have any problems you will need to come and see me. I can't
@@ -45,7 +45,7 @@
     something different wrong with their system. So come and see me with your
     problems.
   </section>
-  
+
   <section>
     <h2>Success???</h2>
     <p>Lets suppose your machine worked right off the bat. If your machine
@@ -79,17 +79,17 @@
     <p>Next we need to check if we can talk to the outside world. To do
     that we will use <code>w3m</code> to lookup a website.</p>
     <pre class="cmd">w3m www.google.com</pre>
-    
+
     <p>Finally, lets make sure that wget is working by accessing Google via
     HTTPS. This command should print <q>Success</q></p>
-    
+
     <pre class="cmd">wget https://www.google.com --no-check-certificate -O/dev/null && echo Success</pre>
-    
+
     <h3>Fstab Check</h3>
     <p>We need to check that you mounted all of your filesystems correctly.
     Issue the command below. The order of the lines may be different, just make
     sure that the marked entries are there.</p>
-    
+
     <pre class="edit"><span class="cmd">mount</span>
 <mark>/dev/sda1 on /</mark> type ext4 (rw)
 proc on /proc type proc (rw,noexec,nosuid,nodev)
@@ -101,11 +101,12 @@ devtmpfs on /dev type devtmpfs (rw,nosuid,mode=0755)
 devpts on /dev/pts type devpts (rw,gid=5,mode=620)</pre>
 
     <h3>Eject CDROM</h3>
-    <p>Our fake CD is still in the virtual drive. We need to eject it so
-    your machine will reboot normally. To do this click <em>Devices &rarr;
-    CD/DVD Devices &rarr; Remove disk from virtual drive</em> in the
-    VM's menu bar. It may ask want you to <q>force unmount</q> the disk. This
-    is normal. Go ahead and unmount it.</p>
+    <p>Our fake CD is still in the virtual CD drive. We need to eject it so
+    your machine will reboot normally. To eject the CD drive just run the
+    command below. If this was a physical machine, the CD tray would have
+    opened, but because it is a VM it simply ejects and removes the CD from
+    the Guest.</p>
+    <pre class="cmd">eject /dev/cdrom</pre>
 
     <h1 style="text-align:center;font-size:3em">If everything works you did
     it!!!!<br>

@@ -13,12 +13,12 @@
   </header>
   <section class="intro">
     <p>Given all the work you have poured into your LFS and how
-    well you have done so far. I have decided to grade you using a
-    practical approach. This means that you will be graded based on getting a
+    well you have done so far. I have decided to grade based on completing
+    various tasks. The tasks are designed to have you create a more and more
+    useful system. In other words, you will be graded based on getting a
     working system together. Graduate students are, as always, expected to
     preform at a higher level than undergraduates. This lead to two
-    rubrics based on your classification. Below you will also find information
-    to help you 100% for this project.</p>
+    rubrics based on your classification.</p>
   </section>
 
   <section>
@@ -41,7 +41,7 @@
           <td class="center">75</td><td>Finish Chapter 8</td>
         </tr>
         <tr>
-          <td class="center">85</td><td>Finish Chapter 9, i.e. system
+          <td class="center">80</td><td>Finish Chapter 9, i.e. system
           boots</td>
         </tr>
         <tr>
@@ -97,11 +97,11 @@
     <p>Chapters seven through nine are not nearly as difficult as chapters
     five and six. Chapter eight is the most difficult and finicky of the
     three. I recommend you try your best to finish chapters 7&ndash;9
-    <strong>by Friday, March 15th</strong>. That will give you plenty of time
+    <strong>by Friday, March 14th</strong>. That will give you plenty of time
     to work towards a higher grade.</p>
 
     <p>Remember this project is worth <em>20%</em> of your final grade! It is
-    <strong>due on April 19<sup>th</sup></strong>. There is no reason you
+    <strong>due on April 18th</strong>. There is no reason you
     should not get a 100%.</p>
     </section>
 
@@ -128,7 +128,7 @@
 
     <ul>
       <li><a href="http://w3m.sourceforge.net/MANUAL">W3m's Manual</a></li>
-      <li><a href="http://box.matto.nl/w3m.html">Useful commands
+      <li><a href="w3m.html">Useful commands
       you may not have gotten from the manual</a></li>
     </ul>
 
@@ -186,16 +186,56 @@ GPMOPTS="-B 132"
     all the packages below in the <span class="file">/sources</span>
     directory.</p>
 
+    <h3>Download The Book</h3>
+    <p>They sometimes update the book in March. This has caused students to
+    accidentally break their systems. To solve this download and unpack the book
+    in the root user's home directory. From then on you can use w3m to view the
+    various web pages in the book.</p>
+
+    <pre class="cmd">wget http://www.linuxfromscratch.org/blfs/downloads/stable/blfs-book-7.4-html.tar.bz2
+mkdir blfs
+tar xf blfs-book*.tar.bz2 -C ~/blfs</pre>
+
+    <p>There is an error in the book. All of the URLs for the
+    <span class="file">*.patch</span> files are wrong. Needless to say this
+    makes downloading the patch files difficult. Run the following
+    mini-script to fix all of the URLs.</p>
+
+    <pre class="cmd">for d in ~/blfs/*/ ; do
+    sed -i 's|/patches/blfs/svn|/blfs/downloads/7.4/patches|g' $d/*.html
+done</pre>
+
+    <p>Basically, the script goes through all of the HTML files and replaces
+    the incorrect URL path with the correct one.</p>
+
+
     <h3>The Bash Shell Startup Files</h3>
     <p>Before starting on the Xorg build, do the
-    <a href="http://www.linuxfromscratch.org/blfs/view/stable/postlfs/profile.html">The
-    Bash Shell Startup Files</a> section in chapter three of the BLFS book.
-    This step is necessary in order to setup some needed Xorg
+    <q>The Bash Shell Startup Files</q> section in chapter three of the
+    BLFS book. This step is necessary in order to setup some needed Xorg
     build environment variables.</p>
+
+    <p style="text-align:center">
+      <a href="http://www.linuxfromscratch.org/blfs/view/stable/postlfs/profile.html">
+        ~/blfs/postlfs/profile.html
+      </a>
+    </p>
 
     <p>At one point during this section they will have you create the
     <span class="file">/etc/profile.d/i18n.sh</span> file. You will need to
     specify your language setting. Our system uses <q>en_US.iso88591</q>.</p>
+
+    <p>You can also make your life easier by adding a these aliases. These
+    aliases allow you run the configure-make-make-install with only a few
+    keystrokes. Put them at the end of <span class="file">~/.bash_profile</span>
+    file.</p>
+
+    <pre class="cmd">
+alias cmi='./configure --prefix=/usr --sysconfdir=/etc --disable-static && make && make install'
+alias mi='make && make install'
+alias xc='./configure $XORG_CONF'
+alias xcmi='./configure $XORG_CONF && make && make install'
+</pre>
 
     <p>After completing this section log out then log back in. That way your
     new settings will take effect.</p>
@@ -213,11 +253,12 @@ GPMOPTS="-B 132"
 
     <p style="text-align:center">
       <a href="http://www.linuxfromscratch.org/blfs/view/stable/x/installing.html">
-         http://www.linuxfromscratch.org/blfs/view/stable/x/installing.html</a>
+         ~/blfs/x/installing.html</a>
     </p>
 
-    <p>Be aware you will need to install LLVM in order to install Mesa. You will
-    also need to install the animated png functionality in
+    <p>When given a choice about what version of Python to install, choose
+    2.7.5. You will also need to install the optional  animated png
+    functionality in
     <span class="file">libpng</span> (required later by Firefox).</p>
 
     <h3>Build Advice</h3>
@@ -227,9 +268,20 @@ GPMOPTS="-B 132"
     These types of builds require you to create a md5sums file and use
     <code>wget</code> to download the file. The BLFS book assumes you will
     be building stuff as a non-root user. For us this just adds unneeded
-    complications. You do not need to install <code>sudo</code>. You will need
-    to remove all references to the "as_root()" function, it is unnecessary
-    for our build.</p>
+    complications. <strong>You do not need to install
+    <code>sudo</code>.</strong></p>
+
+    <p>Create the following function. It will allow you to use the directions
+    as is. The function basically just runs any commands given it. It only
+    exists so we do not need to alter the book's directions.</p>
+
+    <pre class="cmd">cat > /etc/profile.d/as_root.sh &lt;&lt;EOF
+as_root() {
+    $*
+}
+export -f as_root
+EOF</pre>
+
 
     <h4>Required and Recommended Packages</h4>
 
@@ -260,8 +312,13 @@ GPMOPTS="-B 132"
     <h4>$XORG_PREFIX</h4>
     <p>The introduction section will ask you to create a variable that
     will hold the future installation directory. Be sure to specify
-    <span class="file">/usr</span> as the installation
-    directory.</p>
+    <span class="file">/usr</span> as the installation (prefix)
+    directory. Note, you only need to do about half the directions, the rest
+    are only applicable if you are installing Xorg somewhere besides
+    <span class="file">/usr</span>.</p>
+
+    <p>After finishing the introduction, be sure to log out and then log
+    back in so the variables will take effect.</p>
 
     <h4>The Drivers Package</h4>
     <p>You only need to install two of the available drivers: the
@@ -311,7 +368,7 @@ GPMOPTS="-B 132"
 
     <p style="text-align:center">
       <a href="http://www.linuxfromscratch.org/blfs/view/stable/x/openbox.html">
-        http://www.linuxfromscratch.org/blfs/view/stable/x/openbox.html</a>
+       ~/blfs/x/openbox.html</a>
     </p>
 
     <p>You can start programs by right-clicking on the desktop area. You will
@@ -336,18 +393,67 @@ GPMOPTS="-B 132"
   <section>
   <h2>Firefox Web Browser</h2>
 
+  <h3>Build takes up too much space</h3>
+
+  <p>Last year we did this build and it only used up 3.5GB of space. But one
+  year latter, and the build will no longer fit on our 4GB build disk. We are
+  going to have to do something "clever" to fix this.</p>
+
+  <p>What you need to do is create a new hard-disk that is 10GB in size. Why
+  that number?
+  <a href="https://developer.mozilla.org/en-US/docs/Developer_Guide/Build_Instructions/Linux_Prerequisites">I
+  found some documentation that hints we need at least 8GB.</a> We are using an
+  inflated size as a cushion.</p>
+
+  <p>To create the disk and make it usable do the following:</p>
+  <ol>
+    <li>Turn off the VM. You can do this using the <code>halt</code>
+    command.</li>
+
+    <li>Open the settings dialog for your VM.</li>
+
+    <li>Select the storage pane. Click on the Controller SATA item and click
+    the Add Hard Disk button.</li>
+
+    <li>Click create new disk. Proceed through the dialog, just be sure to
+    make the drive's size equal to 10GB. If you are using a FAT32 formated
+    USB drive, save the VDI file onto the actual computer's hard drive.</li>
+
+    <li>Start your VM.</li>
+
+    <li>You new hard drive should be
+    <span class="file">/dev/sdc</span>. Partition the disk such that
+    the disk only has one big partition.</li>
+
+    <li>Create an ext4 filesystem on our new partition.</li>
+
+    <li>Mount the partition.
+    <pre class="cmd">mount -v -t ext4 /dev/sdc1 /mnt</pre></li>
+  </ol>
+
+  <p>Now instead of downloading and building in the
+  <span class="file">/sources</span> directory, build Firefox in the
+  <span class="file">/mnt</span> directory.
+
+  <p>I know this is a kludge. I did not discover this until you were
+  about to turn in chapter 4. So rather than have you redo chapters 1-4, I
+  created this work around.</p>
+
+  <h3>Build Advice</h3>
   <p>To build this package simply follow the directions laid out in the BLFS
   book. Unlike the Xorg build you need to <strong>skip the recommended
   dependencies</strong> with one exception. The configure script has a bug
   in it. To work around the bug you must install the optional
-  <span class="file">yasm</span> package. You will still need to build the
-  recommended packages for Firefox's dependencies.</p>
+  <span class="file">yasm</span> package. <em>You will still need to build the
+  recommended packages for Firefox's dependencies.</em></p>
 
-  <p>Building Firefox requires a lot of space (approximately 3.5GB). I,
+<!--
+  <p>Building Firefox requires a lot of space (approximately 4GB). I,
   therefore, recommend that you delete the contents of the
   <span class="file">/sources</span> directory before building the Firefox
   package. It also requires a ton of RAM. I, therefore, recommend you do not
   do the build in a GUI environment.</p>
+-->
 
   <p>Be sure to carefully read the directions concerning the
   <span class="file">mozconfig</span> file. This file will require editing.
@@ -356,7 +462,18 @@ GPMOPTS="-B 132"
 
   <p style="text-align:center">
     <a href="http://www.linuxfromscratch.org/blfs/view/stable/xsoft/firefox.html">
-      http://www.linuxfromscratch.org/blfs/view/stable/xsoft/firefox.html
+      ~/blfs/xsoft/firefox.html
+    </a>
+  </p>
+
+  <p>The URL for downloading the Firefox tar-ball in the book is wrong. Mozilla
+  is in the middle of moving their primary server to a new URL.
+  The URL listed in the book refers to the old address. The URL below should
+  be the correct one.</p>
+
+  <p style="text-align:center">
+    <a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/23.0.1/source/firefox-23.0.1.source.tar.bz2">
+      http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/23.0.1/source/firefox-23.0.1.source.tar.bz2
     </a>
   </p>
   </section>
@@ -364,14 +481,15 @@ GPMOPTS="-B 132"
   <section>
   <h2>Making A Complete Distro</h2>
 
-  <p>This exercise is for graduate students only. Undergraduate students
-  should skip this section.</p>
+  <p><strong>This exercise is for graduate students only. Undergraduate students
+  should skip this section.</strong></p>
 
-  <p>As you have probably noticed, throughout the semester I have asked
-  graduate students to perform assignments that often require some level of
-  <q>research</q>. I do this because it simulates real life, where you have to
+  <p>Throughout the semester I have asked graduate students to perform
+  assignments that often require some level of
+  <q>research</q>. I do this because it simulates real life, where the solutions
+  to problems are not found in textbooks. In this case, you have to
   use your ingenuity to install, properly configure, and use complex pieces of
-  software. The goal of this assignment is for you to get a working
+  software. The goal of this part of the project is for you to get a working
   distro with a GUI interface.</p>
 
   <p>You are free to choose any of the desktop environment's listed in the
@@ -398,9 +516,9 @@ GPMOPTS="-B 132"
   </ol>
 
   <h3>Known Issues</h3>
-  <p>These are known problems encounter by students as they were competing this
-  section of the build. They are meant to help you avoid pitfalls other
-  students fell into.</p>
+  <p>These are known problems encountered by students as they were competing
+  this section of the build. They listed here to help you avoid the pitfalls
+  other students fell into.</p>
 
   <ul>
     <li>Gnome3 will only be able to run in "fall back mode." The reason behind
@@ -415,7 +533,7 @@ GPMOPTS="-B 132"
     script we installed in chapter 7.</li>
 
     <li>The current GDM package does not seem to work with Virtualbox.
-    This this display manager is used by both Xfce and Gnome. Hence if you
+    This display manager is used by both Xfce and Gnome. Hence if you
     are building either of these environments, you will need to install the
     <a href="http://slim.berlios.de/">SLiM</a> display manager rather than
     GDM. Read the <code>INSTALL</code> file that comes with SLiM in order
@@ -425,82 +543,6 @@ GPMOPTS="-B 132"
     SLiM, it will not work properly.</li>
   </ul>
   </section>
-<!--
-  <section>
-  <h2>LXDE</h2>
-
-  <ul>
-    <li>This part of the assignment is much easier to complete after you have
-    done the Openbox and Firefox portions. I recommend doing this build from
-    within the Openbox environment. It is much easier to read and understand
-    the web pages in Firefox.</li>
-
-    <li>Install the <span class="file">hicolor-icon-theme</span>,
-    <span class="file">desktop-file-utils</span>,
-    <span class="file">xdg-utils</span>,
-    <span class="file">d-bus</span>, and the
-    <span class="file">d-bus Glib Bindings</span> from the BLFS book before
-    starting the LXDE install.</li>
-
-    <li>LXDE depends on <span class="file">d-bus</span>. After installing
-    <span class="file">d-bus</span> and the bindings you will need to install
-    its boot scripts. These can be found in the <q>BLFS Boot Scripts</q>
-    section of the book. After you finish the <span class="file">d-bus</span>
-    section you need to reboot the VM so it will work properly.</li>
-
-    <li><a href="http://cblfs.cross-lfs.org/index.php/LXDE">This is an outdated
-    guide on how to build LXDE.</a> It should give you a pretty good idea on
-    the order you will need to build the packages in. <strong>You must use
-    the most updated ones from the LXDE website</strong> not these out dated
-    packages. Be warned the dependencies have changed considerably since this
-    was written.</li>
-
-    <li>Many of the builds will have you use a prefix switch when you run
-    the configure script. Use <span class="file">/usr</span> just like you
-    did for Xorg. However, the configure script will then want to erroneously
-    store configuration files in <span class="file">/usr/etc</span> directory.
-    This is wrong. To fix it also use the <q>--sysconfdir=/etc</q> switch
-    when running the configure scripts, unless told otherwise.</li>
-
-    <li>One of the packages depends on <span class="file">libwnck</span> and
-    another on the <span class="file">VTE</span> package. The BLFS
-    book has two versions of these packages, use the one that depends on
-    GTK+2.</li>
-
-    <li>Use the non-obconf version of LXAppearance. There is a bug that causes
-    the configure script will not include the Xorg libraries (verison 0.3.0).
-    The sed scirpt fixes this bug.
-    <pre class="cmd">
-sed -i 's/gtk+/x11 gtk+/' configure.in &&
-autoreconf -v && ./configure --prefix=/usr &&
-make && make install</pre></li>
-
-    <li>Skip the GtkNetCat, LXLauncher, LXNM, and LXMusic packages.</li>
-
-    <li>When building <code>lxdm</code> you need to apply
-    <a href="http://lxde.git.sourceforge.net/git/gitweb.cgi?p=lxde/lxdm;a=commitdiff_plain;h=d4e41ecb;hp=f0951bdf736026b041001e846d2cb93f7f2852e1">
-    this patch</a>. Otherwise LXDE will use up 100% of your CPU (version
-    0.4.1)</li>
-
-    <li>The default <span class="file">lxdm.conf</span> file has the wrong file
-    path for the <em>greeter</em> option. Be sure to fix it, otherwise you
-    will get a blank screen when you launch <code>lxdm</code>.
-
-    <li>You will have to create the start up file
-    <span class="file">/etc/init.d/lxdm</span> and the symbolic links in the
-    correct run levels. Use <span class="file">/etc/init.d/template</span> as
-    a base for the <code>lxdm</code> init script. To get LXDM to run as a
-    daemon, pass it the <code>-d</code> option on startup. When creating the
-    symbolic links, be sure to remember that LXDE depends on
-    <code>d-bus</code>. Also be sure to use <strong>relative paths</strong>
-    when creating the symbolic links.</li>
-
-    <li>Because Firefox was built before we had a working desktop system, you
-    may need to create/install the <span class="file">.desktop</span> file
-    manually so it shows up in the menu.</li>
-  </ul>
-  <section>
--->
   </article>
   <footer>
     <a id="html" href="http://validator.w3.org/check?uri=referer"

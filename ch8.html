@@ -53,6 +53,10 @@
 make defconfig
 make LANG=$LANG LC_ALL= menuconfig</span>
 [ ] 64-bit Kernel
+Processor type and features --&gt; <!-- This fixes "rcu_sched detected stall on cpu errors" -->
+     [*] Linux guest support --&gt;
+        [*] Enable paravirtualization code
+        [*] KVM Guest support (including kvmclock)
 Device Drivers  ---&gt;
     Generic Driver Options --&gt;
         [*] Maintain a devtmpfs filesystem to mount at /dev

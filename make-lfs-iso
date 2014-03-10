@@ -266,6 +266,16 @@ if [[ ! -e $CHROOT/etc/apt/sources.list ]] ; then
     die "Failed to create $CHROOT/etc/apt/sources.list file"
 fi
 
+info "Installing root's bashrc file"
+if ! sed "s|HTTP_CLIENT_SCRIPT|$HTTP_CLIENT_SCRIPT|" \
+       $DEFFILES/bashrc > $CHROOT/root/.bashrc ; then
+    die "Could not install the bashrc file"
+
+#Double check sed worked correctly
+elif ! grep -q "$HTTP_CLIENT_SCRIPT" $CHROOT/root/.bashrc ; then
+    die "Failed to add the mirror \"$HTTP_CLIENT_SCRIPT\" to the bashrc script"
+fi
+
 info "Mounting the needed directories under $CHROOT"
 if ! (mount -v --bind /dev $CHROOT/dev &&
       mount -vt devpts devpts $CHROOT/dev/pts -o gid=5,mode=620 &&
@@ -316,7 +326,7 @@ if grep -q admin /etc/group ; then
     sed -i '/^admin.*$/d' /etc/group
 fi
 groupadd admin
-usermod -a -G 'users,plugdev,audio,cdrom,disk' root
+usermod -a -G 'users,plugdev,audio,cdrom,admin,disk' root
 passwd -d root #Make root have no password
 
 info 'Preseeding for apt'
@@ -392,10 +402,6 @@ fi
 info 'Performing chroot install ...'
 if ! LANG=C chroot $CHROOT /chroot-install ; then
     die "Chroot install failed!"
-fi
-
-if ! cp -v "$DEFFILES/bashrc" "$CHROOT/root/.bashrc" ; then
-    die "Failed to copy the new bashrc file to /root"
 fi
 
 #For some reason the chroot changes the host environment's hostname
