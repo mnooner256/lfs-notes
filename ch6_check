@@ -438,7 +438,6 @@ cat > $FILES <<EOF
 /usr/bin/rename
 /usr/bin/timeout
 /usr/bin/unlzma
-/usr/bin/passwd
 /usr/bin/lzcmp
 /usr/bin/tzselect
 /usr/bin/roff2html
