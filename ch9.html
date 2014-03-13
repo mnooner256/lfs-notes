@@ -100,6 +100,13 @@ devtmpfs on /dev type devtmpfs (rw,nosuid,mode=0755)
 <mark>/dev/sdb1 on /sources</mark> type ext4 (rw)
 devpts on /dev/pts type devpts (rw,gid=5,mode=620)</pre>
 
+    <p>The swap partition is not technically mounted. Swap partitions are
+    listed in the <span class="file">/proc</span> filesystem.</p>
+
+    <pre class="edit"><span class="cmd">cat /proc/swaps</span>
+Filename            Type        Size    Used    Priority
+<mark>/dev/sda3</mark>           partition   785404  0       1</pre>
+
     <h3>Eject CDROM</h3>
     <p>Our fake CD is still in the virtual CD drive. We need to eject it so
     your machine will reboot normally. To eject the CD drive just run the
