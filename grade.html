@@ -192,7 +192,7 @@ GPMOPTS="-B 132"
     in the root user's home directory. From then on you can use w3m to view the
     various web pages in the book.</p>
 
-    <pre class="cmd">wget http://www.linuxfromscratch.org/blfs/downloads/stable/blfs-book-7.4-html.tar.bz2
+    <pre class="cmd">wget http://www.linuxfromscratch.org/blfs/downloads/7.4/blfs-book-7.4-html.tar.bz2
 mkdir blfs
 tar xf blfs-book*.tar.bz2 -C ~/blfs</pre>
 
@@ -206,7 +206,9 @@ tar xf blfs-book*.tar.bz2 -C ~/blfs</pre>
 done</pre>
 
     <p>Basically, the script goes through all of the HTML files and replaces
-    the incorrect URL path with the correct one.</p>
+    the incorrect URL path with the correct one. You will get two errors that
+    it could not find *.html files inside two of the directories, this is
+    fine.</p>
 
 
     <h3>The Bash Shell Startup Files</h3>
@@ -216,7 +218,7 @@ done</pre>
     build environment variables.</p>
 
     <p style="text-align:center">
-      <a href="http://www.linuxfromscratch.org/blfs/view/stable/postlfs/profile.html">
+      <a href="http://www.linuxfromscratch.org/blfs/view/7.4/postlfs/profile.html">
         ~/blfs/postlfs/profile.html
       </a>
     </p>
@@ -233,8 +235,8 @@ done</pre>
     <pre class="cmd">
 alias cmi='./configure --prefix=/usr --sysconfdir=/etc --disable-static && make && make install'
 alias mi='make && make install'
-alias xc='./configure $XORG_CONF'
-alias xcmi='./configure $XORG_CONF && make && make install'
+alias xc='./configure $XORG_CONFIG'
+alias xcmi='./configure $XORG_CONFIG && make && make install'
 </pre>
 
     <p>After completing this section log out then log back in. That way your
@@ -252,7 +254,7 @@ alias xcmi='./configure $XORG_CONF && make && make install'
     24</strong>, a link to this chapter can be found below. </p>
 
     <p style="text-align:center">
-      <a href="http://www.linuxfromscratch.org/blfs/view/stable/x/installing.html">
+      <a href="http://www.linuxfromscratch.org/blfs/view/7.4//x/installing.html">
          ~/blfs/x/installing.html</a>
     </p>
 
@@ -367,7 +369,7 @@ EOF</pre>
     below.</p>
 
     <p style="text-align:center">
-      <a href="http://www.linuxfromscratch.org/blfs/view/stable/x/openbox.html">
+      <a href="http://www.linuxfromscratch.org/blfs/view/7.4//x/openbox.html">
        ~/blfs/x/openbox.html</a>
     </p>
 
@@ -461,7 +463,7 @@ EOF</pre>
   Otherwise, just follow the directions in the book.</p>
 
   <p style="text-align:center">
-    <a href="http://www.linuxfromscratch.org/blfs/view/stable/xsoft/firefox.html">
+    <a href="http://www.linuxfromscratch.org/blfs/view/7.4//xsoft/firefox.html">
       ~/blfs/xsoft/firefox.html
     </a>
   </p>
