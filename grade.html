@@ -517,7 +517,7 @@ EOF</pre>
 
   <h3>Known Issues</h3>
   <p>These are known problems encountered by students as they were competing
-  this section of the build. They listed here to help you avoid the pitfalls
+  this section of the build. They are listed here to help you avoid the pitfalls
   other students fell into.</p>
 
   <ul>
@@ -529,8 +529,8 @@ EOF</pre>
     be getting the <em>true</em> Gnome3 experience from you build.</li>
 
     <li>If you install the NetworkManager package, you will need to disable
-    and remove all links to the <code>/etc/init.d/network</code> start up
-    script we installed in chapter 7.</li>
+    and remove all links to the <span class="file">/etc/init.d/network</span>
+    start up script we installed in chapter 7.</li>
 
     <li>The current GDM package does not seem to work with Virtualbox.
     This display manager is used by both Xfce and Gnome. Hence if you
@@ -538,9 +538,20 @@ EOF</pre>
     <a href="http://slim.berlios.de/">SLiM</a> display manager rather than
     GDM. Read the <code>INSTALL</code> file that comes with SLiM in order
     to figure out how to install it. You will need to make a custom SLiM init
-    script. You will, also, need to create by hand the symbolic links in the
-    proper run-level directories. Do not try to use the initab method to start
-    SLiM, it will not work properly.</li>
+    script. An example script can be found on SLiM's website. You will, also,
+    need to create by hand the symbolic links in the proper run-level
+    directories. The website lists an alternative method to starting SLiM. Do
+    not try to use this alternate, initab, method to start SLiM, it will not
+    work properly.</li>
+
+    <li>If you are installing KDE, despite what the directions say, you will
+    need to create the <span class="file">/etc/profile.d/kde.sh</span> script.
+    The script is found in the <em>KDE Pre-installation Configuration</em>
+    section. Be sure to change the value <code>$KDE_PREFIX</code> to
+    <span class="file">/usr</span>, not what it is in the section. Afterwards,
+    you need to create a new bash session so bash will execute the script.
+    Be sure to double check the value of <code>$KDE_PREFIX</code> in new
+    terminals.</li>
   </ul>
   </section>
   </article>
