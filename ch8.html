@@ -32,6 +32,12 @@
 
   <section>
     <h2>8.3 Building The Kernel</h2>
+
+    <figure>
+        <img src="img/kernelpanic.png"
+             alt="The most interesting kernel panic in the world">
+    </figure>
+
     <p>Building a Linux kernel is extremely easy. However, getting a kernel
     that works correctly can be pretty tough. Normally you would need to make
     sure that all your hardware's drivers would be loaded properly. Luckily,
@@ -40,10 +46,8 @@
     in. The reason being that it will cut the number of possible errors that
     can occur by two-thirds.</p>
 
-    <figure>
-        <img src="img/kernelpanic.png"
-             alt="Most interesting kernel panic in the world">
-    </figure>
+    <p>Before starting, double check that the <code>$LANG</code> has a valid
+    value!</p>
 
     <p>Carefully follow the directions up to the second <code>make</code>.
     Here you will need to make various menu selections to create a working
@@ -53,14 +57,35 @@
     is listed with an <span class="file">*</span>, except for the first option
     which needs to be turned off.</p>
 
+    <!--
+    Kernel parameter marked with "rcufix" are only enabled to fix the
+    RCU scheduling bug. This bug causes a "rcu_sched detected stall on CPU
+    errors" message along with a very long stack trace. The bug and warning
+    do not matter, it probably has to do with the host system preempting the
+    CPU. This problem seems to only happen on AMD processors.
+
+    The result of this message basically makes w3m unusable, and the command
+    line very difficult to use. The message fills the browser and screen
+    with "garbage" text, so the user cannot read what is on the screen.
+
+    If the problem persists, have the student run the line of code below
+    as root. It will need to be run after every reboot, making an init script
+    would probably suppress the problem permanently. Note, in later kernels
+    the directory should be "rcutree".
+
+        # echo 1 > /sys/module/rcupdate/parameters/rcu_cpu_stall_suppress
+
+    Try removing the marked parameters in a later kernel.
+    -->
     <pre class="edit">
 <span class="cmd">source /etc/profile
 make defconfig
 make LANG=$LANG LC_ALL= menuconfig</span>
 [ ] 64-bit Kernel
-Processor type and features --&gt; <!-- This fixes "rcu_sched detected stall on cpu errors" -->
+Processor type and features --&gt; <!-- rcufix -->
      [*] Linux guest support --&gt;
         [*] Enable paravirtualization code
+        [*]   Paravirtualization layer for spinlocks
         [*] KVM Guest support (including kvmclock)
 Device Drivers  ---&gt;
     Generic Driver Options --&gt;
@@ -70,10 +95,14 @@ Device Drivers  ---&gt;
             <*> Userspace VESA VGA graphics support
             [*] VESA VGA graphics support
 File systems  ---&gt;
+    &lt;*&gt; Ext3 journalling file system support
     &lt;*&gt; The Extended 4 (ext4) filesystem
     [*] Use ext4 for ext2/ext3 file systems
     [*] Ext4 POSIX Access Control Lists
     [*] Ext4 Security Labels
+Kernel Hacking ---&gt; <!-- rcufix -->
+    RCU Debugging ---&gt;
+        [60] RCU CPU stall timeout in seconds
 </pre>
     <p>When you are finished making your selections, continue following the
     book's directions.</p>
