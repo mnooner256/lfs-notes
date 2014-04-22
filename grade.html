@@ -546,6 +546,15 @@ EOF</pre>
     not try to use this alternate, initab, method to start SLiM, it will not
     work properly.</li>
 
+    <li>If you install Xfce and no icons show up then you need to do the
+    following. First, you need to install <code>gnome-icon-theme</code>. This
+    will give you the correct icons. Now you need to tell Gtk and Xfce to use
+    your fancy new icon theme.
+    <pre class="cmd">cat > /etc/gtk-2.0/gtkrc << "EOF"
+include "/usr/share/themes/Xfce/gtk-2.0/gtkr"
+gtk-icon-theme-name = "hicolor"
+EOF</pre>
+
     <li>If you are installing KDE, despite what the directions say, you will
     need to create the <span class="file">/etc/profile.d/kde.sh</span> script.
     The script is found in the <em>KDE Pre-installation Configuration</em>
